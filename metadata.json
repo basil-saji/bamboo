@@ -1,0 +1,6 @@
+{
+  "name": "bamboo",
+  "description": "Private, local-first AI workspace. Connect compatible AI models with persistent, beautifully formatted conversations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
