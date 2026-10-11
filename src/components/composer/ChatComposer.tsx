@@ -45,11 +45,10 @@ export const ChatComposer: React.FC<ChatComposerProps> = ({
     if (!el) return;
     el.style.height = 'auto';
     const newHeight = Math.min(el.scrollHeight, 220);
-    el.style.height = `${Math.max(newHeight, 52)}px`;
+    el.style.height = `${Math.max(newHeight, 48)}px`;
   }, [input]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Avoid triggering when IME composition is active (e.g. Japanese/Chinese typing)
     if (e.nativeEvent.isComposing) return;
 
     if (e.key === 'Escape' && isGenerating) {
@@ -84,7 +83,7 @@ export const ChatComposer: React.FC<ChatComposerProps> = ({
     setAttachments([]);
 
     if (textareaRef.current) {
-      textareaRef.current.style.height = '52px';
+      textareaRef.current.style.height = '48px';
       textareaRef.current.focus();
     }
   };
@@ -94,7 +93,6 @@ export const ChatComposer: React.FC<ChatComposerProps> = ({
     if (!files || files.length === 0) return;
 
     Array.from(files).forEach((file) => {
-      // Read text/code/document files up to 2MB
       if (file.size > 2 * 1024 * 1024) {
         alert(`File ${file.name} is larger than 2MB limit.`);
         return;
@@ -127,22 +125,22 @@ export const ChatComposer: React.FC<ChatComposerProps> = ({
   const canSend = (input.trim().length > 0 || attachments.length > 0) && !isGenerating;
 
   return (
-    <div className="w-full max-w-3xl mx-auto px-4 pb-4 md:pb-6 pt-2">
-      <div className="relative rounded-2xl border border-border bg-card shadow-md transition-all focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20">
+    <div className="w-full max-w-3xl mx-auto px-4 pb-3 md:pb-5 pt-1">
+      <div className="relative rounded-2xl border border-border/80 bg-card shadow-xs transition-all focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/10">
         {/* Attachment chips preview */}
         {attachments.length > 0 && (
-          <div className="flex flex-wrap gap-2 px-3 pt-3 pb-1 border-b border-border/40">
+          <div className="flex flex-wrap gap-1.5 px-3 pt-2.5 pb-1 border-b border-border/30">
             {attachments.map((att) => (
               <div
                 key={att.id}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs bg-muted text-muted-foreground border border-border/50"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] bg-muted/60 text-muted-foreground border border-border/40 font-mono"
               >
-                <Paperclip className="w-3 h-3" />
-                <span className="truncate max-w-[180px] font-mono text-[11px]">{att.name}</span>
+                <Paperclip className="w-3 h-3 text-primary" />
+                <span className="truncate max-w-[180px]">{att.name}</span>
                 <button
                   type="button"
                   onClick={() => handleRemoveAttachment(att.id)}
-                  className="p-0.5 rounded-full hover:bg-card hover:text-foreground text-muted-foreground transition cursor-pointer"
+                  className="p-0.5 rounded hover:text-foreground text-muted-foreground transition cursor-pointer"
                   title="Remove attachment"
                   aria-label="Remove attachment"
                 >
@@ -153,7 +151,7 @@ export const ChatComposer: React.FC<ChatComposerProps> = ({
           </div>
         )}
 
-        {/* Text input area */}
+        {/* Textarea */}
         <textarea
           ref={textareaRef}
           value={input}
@@ -161,15 +159,15 @@ export const ChatComposer: React.FC<ChatComposerProps> = ({
           onKeyDown={handleKeyDown}
           placeholder={
             models.length === 0
-              ? 'Connect a model first to start chatting...'
-              : 'Message Bamboo...'
+              ? 'Connect a model to start conversation...'
+              : 'Reply to Bamboo...'
           }
           rows={1}
-          className="w-full px-4 pt-3 pb-2 text-sm text-foreground placeholder:text-muted-foreground bg-transparent resize-none focus:outline-none leading-relaxed"
+          className="w-full px-4 pt-3 pb-2 text-sm text-foreground placeholder:text-muted-foreground/70 bg-transparent resize-none focus:outline-none leading-relaxed font-sans"
         />
 
-        {/* Bottom toolbar */}
-        <div className="flex items-center justify-between px-3 pb-2.5 pt-1">
+        {/* Toolbar */}
+        <div className="flex items-center justify-between px-3 pb-2.5 pt-0.5">
           {/* Left tools: Attachment & Model Selector */}
           <div className="flex items-center gap-1.5">
             <input
@@ -183,7 +181,7 @@ export const ChatComposer: React.FC<ChatComposerProps> = ({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors cursor-pointer"
+              className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/40 transition cursor-pointer"
               title="Attach text or code file"
               aria-label="Attach file"
             >
@@ -200,26 +198,26 @@ export const ChatComposer: React.FC<ChatComposerProps> = ({
           </div>
 
           {/* Right tool: Send or Stop button */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             {isGenerating ? (
               <button
                 type="button"
                 onClick={onStop}
-                className="p-2 rounded-xl bg-destructive text-destructive-foreground hover:opacity-90 transition-opacity shadow-xs cursor-pointer flex items-center justify-center"
+                className="w-8 h-8 rounded-lg bg-destructive text-destructive-foreground hover:opacity-90 transition shadow-xs cursor-pointer flex items-center justify-center"
                 title="Stop generation (Esc)"
                 aria-label="Stop generation"
               >
-                <Square className="w-4 h-4 fill-current" />
+                <Square className="w-3.5 h-3.5 fill-current" />
               </button>
             ) : (
               <button
                 type="button"
                 onClick={handleSend}
                 disabled={!canSend}
-                className={`p-2 rounded-xl transition-all shadow-xs flex items-center justify-center cursor-pointer ${
+                className={`w-8 h-8 rounded-lg transition-all shadow-xs flex items-center justify-center cursor-pointer ${
                   canSend
                     ? 'bg-primary text-primary-foreground hover:opacity-90'
-                    : 'bg-muted text-muted-foreground/40 cursor-not-allowed opacity-60'
+                    : 'bg-muted/50 text-muted-foreground/30 cursor-not-allowed opacity-60'
                 }`}
                 title={enterToSend ? 'Send message (Enter)' : 'Send message (Cmd+Enter)'}
                 aria-label="Send message"
@@ -231,11 +229,11 @@ export const ChatComposer: React.FC<ChatComposerProps> = ({
         </div>
       </div>
 
-      <div className="flex items-center justify-between px-2 pt-1.5 text-[11px] text-muted-foreground/60 select-none">
+      <div className="flex items-center justify-between px-2 pt-1 text-[11px] text-muted-foreground/60 select-none font-sans">
         <span>
-          {enterToSend ? 'Enter to send · Shift+Enter for newline' : 'Cmd+Enter to send · Enter for newline'}
+          {enterToSend ? 'Enter to send · Shift+Enter for newline' : 'Cmd+Enter to send'}
         </span>
-        <span>Local-first · No telemetry</span>
+        <span>Local-first · Offline capable</span>
       </div>
     </div>
   );

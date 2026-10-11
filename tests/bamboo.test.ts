@@ -6,13 +6,21 @@ import {
   getAllModels,
   getMessagesByConversation,
   getModelById,
+  getProfile,
   resetDbConnection,
   saveConversation,
   saveMessage,
   saveModel,
+  saveProfile,
 } from '../src/lib/storage/db';
 import { SSEParser } from '../src/lib/streaming/sse-parser';
-import { buildChatMessages, normalizeBaseUrl } from '../src/lib/adapters/openai';
+import {
+  buildChatMessages,
+  constructEndpointRoutes,
+  getRequestHeaders,
+  normalizeBaseUrl,
+} from '../src/lib/adapters/openai';
+import { createPasscodeCredentials, verifyPasscode } from '../src/lib/security/local-auth';
 import { parseMarkdown } from '../src/lib/markdown/parser';
 import { exportBackup, importBackup, validateBackup } from '../src/lib/backups/export-import';
 import type { Conversation, Message, ModelProfile } from '../src/types';
@@ -331,5 +339,60 @@ describe('BAMBOO Production Chat Verification Suite', () => {
     const apiPath = '/v1/chat/completions';
     const isApi = apiPath.includes('/v1/') || apiPath.includes('/chat/');
     expect(isApi).toBe(true);
+  });
+
+  // 21. Endpoint constructor cleanly strips /chat/completions, /models, duplicate /v1/v1
+  it('21. constructEndpointRoutes resolves paths and flags ngrok / mixed content accurately', () => {
+    const routes1 = constructEndpointRoutes('https://demo.ngrok-free.app/v1/chat/completions');
+    expect(routes1.baseUrl).toBe('https://demo.ngrok-free.app/v1');
+    expect(routes1.chatUrl).toBe('https://demo.ngrok-free.app/v1/chat/completions');
+    expect(routes1.discoveryUrl).toBe('https://demo.ngrok-free.app/v1/models');
+    expect(routes1.isNgrok).toBe(true);
+
+    const routes2 = constructEndpointRoutes('http://localhost:8080/v1/v1/models');
+    expect(routes2.baseUrl).toBe('http://localhost:8080/v1');
+    expect(routes2.isLocalhost).toBe(true);
+
+    const routes3 = constructEndpointRoutes('http://remote-server.org:11434');
+    expect(routes3.isRemoteHttp).toBe(true);
+  });
+
+  // 22. Request headers include ngrok-skip-browser-warning
+  it('22. getRequestHeaders includes ngrok-skip-browser-warning and authorization', () => {
+    const headers = getRequestHeaders('my-key') as Record<string, string>;
+    expect(headers['ngrok-skip-browser-warning']).toBe('true');
+    expect(headers['Authorization']).toBe('Bearer my-key');
+  });
+
+  // 23. Local PBKDF2 passcode verification
+  it('23. Local PBKDF2 credentials hash and verify correctly', async () => {
+    const creds = await createPasscodeCredentials('secret-1234');
+    expect(creds.saltHex).toBeDefined();
+    expect(creds.hashHex).toBeDefined();
+
+    const isMatch = await verifyPasscode('secret-1234', creds.saltHex, creds.hashHex, creds.iterations);
+    expect(isMatch).toBe(true);
+
+    const isWrong = await verifyPasscode('wrong-pass', creds.saltHex, creds.hashHex, creds.iterations);
+    expect(isWrong).toBe(false);
+  });
+
+  // 24. Profile persistence
+  it('24. User profile persists and loads from database', async () => {
+    const initial = await getProfile();
+    expect(initial.username).toBe('User');
+
+    await saveProfile({
+      ...initial,
+      username: 'Basil',
+      avatarInitials: 'BS',
+      bio: 'Software Architect',
+      updatedAt: Date.now(),
+    });
+
+    const updated = await getProfile();
+    expect(updated.username).toBe('Basil');
+    expect(updated.avatarInitials).toBe('BS');
+    expect(updated.bio).toBe('Software Architect');
   });
 });

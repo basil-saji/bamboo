@@ -1,5 +1,5 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
-import type { ModelProfile, Conversation, Message, PromptPreset, UserSettings } from '../../types';
+import type { ModelProfile, Conversation, Message, PromptPreset, UserSettings, UserProfile } from '../../types';
 
 export const DB_NAME = 'bamboo_workspace';
 export const DB_VERSION = 1;
@@ -261,6 +261,44 @@ export async function clearAllData(): Promise<void> {
   await tx.done;
 }
 
+// --- User Profile Operations ---
+export const DEFAULT_PROFILE: UserProfile = {
+  username: 'User',
+  avatarInitials: 'U',
+  bio: '',
+  createdAt: Date.now(),
+  updatedAt: Date.now(),
+  hasPasscode: false,
+};
+
+export async function getProfile(): Promise<UserProfile> {
+  try {
+    const db = await getDatabase();
+    const profile = (await db.get('settings', 'user_profile')) as unknown as UserProfile | undefined;
+    return profile ? { ...DEFAULT_PROFILE, ...profile } : DEFAULT_PROFILE;
+  } catch {
+    return DEFAULT_PROFILE;
+  }
+}
+
+export async function saveProfile(profile: UserProfile): Promise<void> {
+  const db = await getDatabase();
+  await db.put('settings', profile as any, 'user_profile');
+}
+
+export async function clearPasscode(): Promise<void> {
+  const current = await getProfile();
+  const updated: UserProfile = {
+    ...current,
+    hasPasscode: false,
+    passcodeSaltHex: undefined,
+    passcodeHashHex: undefined,
+    passcodeIterations: undefined,
+    updatedAt: Date.now(),
+  };
+  await saveProfile(updated);
+}
+
 // Query storage usage estimate
 export async function getStorageEstimate(): Promise<{ usage: number; quota: number }> {
   if (navigator.storage && navigator.storage.estimate) {
@@ -269,3 +307,4 @@ export async function getStorageEstimate(): Promise<{ usage: number; quota: numb
   }
   return { usage: 0, quota: 0 };
 }
+

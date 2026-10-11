@@ -18,7 +18,7 @@ bamboo is a lightweight, high-performance Progressive Web App. It runs entirely 
 
 ## Key Features
 
-- **Local-First & Private:** No cloud accounts, databases, trackers, or telemetry. All conversations, model profiles, and settings reside directly in your browser's IndexedDB.
+- **Local-First & Private:** No cloud accounts, databases, trackers, or telemetry. All conversations, model profiles, user preferences, and local credentials reside directly in your browser's IndexedDB.
 - **Empty & Honest Initial State:** No fake models, preloaded chats, or fabricated latency numbers. You connect your real models.
 - **Strict Role Alignment:**
   - Assistant responses: **Left-aligned**, flowing naturally in the readable container.
@@ -30,6 +30,15 @@ bamboo is a lightweight, high-performance Progressive Web App. It runs entirely 
 - **Robust SSE Streaming Engine:**
   - Real-time incremental Server-Sent Events parser handling split chunks, `[DONE]`, network drops, and immediate cancellation via `AbortController`.
   - Generation state machine: `ready`, `connecting`, `generating`, `stopping`, `complete`, `interrupted`, and `error`.
+- **Diagnostic Connection Panel:**
+  - Separate tests for **Discovery** (`GET /v1/models`), **Chat Completion** (`POST /v1/chat/completions`), and **Streaming**.
+  - Measures real latency in milliseconds and reports HTTP status codes.
+  - Tests inference without saving diagnostic prompts to conversation history.
+  - Automatically sends `ngrok-skip-browser-warning: "true"` to prevent ngrok HTML splash pages.
+  - Accurately diagnoses Mixed Content (HTTPS app calling remote HTTP server) and CORS misconfigurations.
+- **Local Personal Profile & Privacy Lock:**
+  - Local single-user profile with username, avatar initials, and role.
+  - Optional local device privacy lock powered by browser Web Crypto PBKDF2 (100,000 iterations). No passwords ever leave the device.
 - **Conversation Management:**
   - Search with debouncing, pin, archive/restore, and delete.
   - **Context Boundary:** Clear inference context while preserving visible conversation history.
@@ -47,7 +56,7 @@ bamboo is a lightweight, high-performance Progressive Web App. It runs entirely 
 
 ## Design System
 
-Bamboo uses a calm palette:
+Bamboo uses a calm, Claude-inspired visual palette:
 - Muted sage and olive primary actions (`oklch(0.666 0.105 118.908)` in light, `oklch(0.676 0.057 132.448)` in dark).
 - Warm cream, muted brown, and charcoal surfaces.
 - Strictly no fluorescent or neon yellow accents.
@@ -88,7 +97,7 @@ OLLAMA_ORIGINS="*" ollama serve
 In Bamboo:
 - **Display Name:** `Ollama Llama 3`
 - **Base URL:** `http://localhost:11434/v1`
-- Click **Fetch models from server** and select your downloaded model (e.g., `llama3.2`).
+- Click **Test Discovery (/models)** or enter `llama3.2` and click **Test Chat Inference**.
 
 ### 2. LM Studio
 1. Open the **Local Server** tab in LM Studio.
@@ -105,5 +114,14 @@ In Bamboo:
 ```
 In Bamboo:
 - **Base URL:** `http://localhost:8080/v1`
+- Enter your model identifier and click **Test Chat Inference**.
+
+### 4. Remote ngrok Tunnel
+```bash
+ngrok http 11434
+```
+In Bamboo:
+- **Base URL:** `https://your-tunnel-id.ngrok-free.app/v1`
+- Bamboo automatically sends `ngrok-skip-browser-warning: "true"` to prevent interstitial HTML interference.
 
 ---

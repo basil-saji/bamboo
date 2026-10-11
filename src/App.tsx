@@ -1,40 +1,41 @@
 import React, { useEffect, useState } from 'react';
-import type { Attachment, UserSettings } from './types';
+import type { Attachment, UserProfile, UserSettings } from './types';
 import { useConversations } from './hooks/useConversations';
 import { useMessages } from './hooks/useMessages';
 import { useModels } from './hooks/useModels';
 import { useTheme } from './hooks/useTheme';
-import { getSettings, saveSettings } from './lib/storage/db';
+import {
+  clearAllData,
+  DEFAULT_PROFILE,
+  DEFAULT_SETTINGS,
+  getProfile,
+  getSettings,
+  saveProfile,
+  saveSettings,
+} from './lib/storage/db';
 import { ChatComposer } from './components/composer/ChatComposer';
 import { Header } from './components/layout/Header';
 import { Sidebar } from './components/layout/Sidebar';
 import { MessageList } from './components/chat/MessageList';
 import { ModelManagerModal } from './components/models/ModelManagerModal';
 import { SettingsModal } from './components/settings/SettingsModal';
+import { ProfileModal } from './components/profile/ProfileModal';
+import { PasscodeUnlockModal } from './components/profile/PasscodeUnlockModal';
+import { LoadingScreen } from './components/ui/LoadingScreen';
 
 export const App: React.FC = () => {
   const { theme, setTheme } = useTheme();
 
+  // Startup initialization state
+  const [isAppReady, setIsAppReady] = useState<boolean>(false);
+
   // Settings
-  const [settings, setSettings] = useState<UserSettings>({
-    theme: 'system',
-    fontSize: 'base',
-    enterToSend: true,
-    defaultSystemPrompt: '',
-    defaultTemperature: 0.7,
-    defaultTopP: 0.9,
-    enableStreaming: true,
-    maxContextMessages: 0,
-  });
+  const [settings, setSettings] = useState<UserSettings>(DEFAULT_SETTINGS);
 
-  useEffect(() => {
-    getSettings().then(setSettings);
-  }, []);
-
-  const handleUpdateSettings = async (newSettings: UserSettings) => {
-    setSettings(newSettings);
-    await saveSettings(newSettings);
-  };
+  // Profile
+  const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isLocked, setIsLocked] = useState<boolean>(false);
 
   // Online / Offline status
   const [isOnline, setIsOnline] = useState<boolean>(
@@ -112,11 +113,44 @@ export const App: React.FC = () => {
     maxContextMessages: settings.maxContextMessages,
   });
 
-  // Handle Send: auto-create conversation if none is active
+  // App Startup Initialization
+  useEffect(() => {
+    let isMounted = true;
+    async function initializeWorkspace() {
+      try {
+        const [loadedSettings, loadedProfile] = await Promise.all([
+          getSettings(),
+          getProfile(),
+        ]);
+        if (isMounted) {
+          setSettings(loadedSettings);
+          setProfile(loadedProfile);
+          if (loadedProfile.hasPasscode) {
+            setIsLocked(true);
+          }
+          setIsAppReady(true);
+        }
+      } catch (err) {
+        console.warn('Initialization error, recovering:', err);
+        if (isMounted) {
+          setIsAppReady(true);
+        }
+      }
+    }
+    initializeWorkspace();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleUpdateSettings = async (newSettings: UserSettings) => {
+    setSettings(newSettings);
+    await saveSettings(newSettings);
+  };
+
   const handleSendMessage = async (content: string, attachments?: Attachment[]) => {
     if (!activeConversationId) {
       const newConv = await createConversation('New conversation', activeModel?.id);
-      // Wait for state to reflect or trigger send in next tick
       setTimeout(async () => {
         try {
           await sendMessage(content, attachments);
@@ -156,108 +190,149 @@ export const App: React.FC = () => {
     reloadConversations();
     reloadMessages();
     getSettings().then(setSettings);
+    getProfile().then(setProfile);
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground font-sans">
-      {/* Sidebar */}
-      <div className={`${isSidebarCollapsedDesktop ? 'md:hidden' : 'md:flex md:w-72'} shrink-0`}>
-        <Sidebar
-          conversations={filteredConversations}
-          activeConversationId={activeConversationId}
-          onSelectConversation={setActiveConversationId}
-          onNewConversation={handleNewConversation}
-          onUpdateTitle={updateTitle}
-          onTogglePin={togglePin}
-          onToggleArchive={toggleArchive}
-          onDeleteConversation={removeConversation}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          filterArchived={filterArchived}
-          setFilterArchived={setFilterArchived}
+    <>
+      {/* Branded Startup Loading Screen */}
+      <LoadingScreen
+        isReady={isAppReady}
+        onRetry={() => {
+          getSettings().then(setSettings);
+          getProfile().then(setProfile);
+          setIsAppReady(true);
+        }}
+        onResetStorage={async () => {
+          await clearAllData();
+          window.location.reload();
+        }}
+      />
+
+      {/* Main Application Shell */}
+      <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground font-sans">
+        {/* Sidebar */}
+        <div className={`${isSidebarCollapsedDesktop ? 'md:hidden' : 'md:flex md:w-64'} shrink-0`}>
+          <Sidebar
+            conversations={filteredConversations}
+            activeConversationId={activeConversationId}
+            onSelectConversation={setActiveConversationId}
+            onNewConversation={handleNewConversation}
+            onUpdateTitle={updateTitle}
+            onTogglePin={togglePin}
+            onToggleArchive={toggleArchive}
+            onDeleteConversation={removeConversation}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            filterArchived={filterArchived}
+            setFilterArchived={setFilterArchived}
+            onOpenModelManager={() => setIsModelManagerOpen(true)}
+            onOpenSettings={() => setIsSettingsOpen(true)}
+            profile={profile}
+            theme={theme}
+            onThemeChange={setTheme}
+            onOpenProfileModal={() => setIsProfileModalOpen(true)}
+            onLockWorkspace={() => setIsLocked(true)}
+            isOpenMobile={isSidebarOpenMobile}
+            onCloseMobile={() => setIsSidebarOpenMobile(false)}
+          />
+        </div>
+
+        {/* Main Workspace */}
+        <main className="flex-1 flex flex-col h-full min-w-0 relative">
+          <Header
+            conversation={activeConversation}
+            models={models}
+            activeModel={activeModel}
+            onSelectModel={setActiveModelId}
+            onOpenModelManager={() => setIsModelManagerOpen(true)}
+            onToggleSidebar={() => {
+              if (window.innerWidth < 768) {
+                setIsSidebarOpenMobile(!isSidebarOpenMobile);
+              } else {
+                setIsSidebarCollapsedDesktop(!isSidebarCollapsedDesktop);
+              }
+            }}
+            onClearContext={clearContextBoundary}
+            onExportMarkdown={handleExportConversationMarkdown}
+            onTogglePin={() => activeConversationId && togglePin(activeConversationId)}
+            onDeleteConversation={() => activeConversationId && removeConversation(activeConversationId)}
+            isOnline={isOnline}
+          />
+
+          {/* Messages & Empty Chat State */}
+          <MessageList
+            messages={messages}
+            models={models}
+            activeModel={activeModel}
+            onOpenModelManager={() => setIsModelManagerOpen(true)}
+            onSelectPrompt={(prompt) => {
+              setComposerInput(prompt);
+            }}
+            onRegenerateMessage={regenerateMessage}
+            onEditUserMessage={editUserMessage}
+          />
+
+          {/* Floating Composer */}
+          <ChatComposer
+            input={composerInput}
+            setInput={setComposerInput}
+            onSend={handleSendMessage}
+            onStop={stopGeneration}
+            generationState={generationState}
+            models={models}
+            activeModel={activeModel}
+            onSelectModel={setActiveModelId}
+            onOpenModelManager={() => setIsModelManagerOpen(true)}
+            enterToSend={settings.enterToSend}
+          />
+        </main>
+
+        {/* Model Manager Modal */}
+        <ModelManagerModal
+          isOpen={isModelManagerOpen}
+          onClose={() => setIsModelManagerOpen(false)}
+          models={models}
+          activeModelId={activeModelId}
+          onSelectModel={setActiveModelId}
+          onCreateModel={createModel}
+          onUpdateModel={updateModel}
+          onDuplicateModel={duplicateModel}
+          onRemoveModel={removeModel}
+          onSetDefaultModel={setDefaultModel}
+        />
+
+        {/* Settings Modal */}
+        <SettingsModal
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
+          theme={theme}
+          onThemeChange={setTheme}
+          settings={settings}
+          onUpdateSettings={handleUpdateSettings}
           onOpenModelManager={() => setIsModelManagerOpen(true)}
-          onOpenSettings={() => setIsSettingsOpen(true)}
-          isOpenMobile={isSidebarOpenMobile}
-          onCloseMobile={() => setIsSidebarOpenMobile(false)}
+          onDataReset={handleDataReset}
+        />
+
+        {/* Profile Modal */}
+        <ProfileModal
+          isOpen={isProfileModalOpen}
+          onClose={() => setIsProfileModalOpen(false)}
+          profile={profile}
+          onProfileUpdated={(up) => setProfile(up)}
+        />
+
+        {/* Passcode Unlock Modal */}
+        <PasscodeUnlockModal
+          isLocked={isLocked}
+          profile={profile}
+          onUnlock={() => setIsLocked(false)}
+          onResetPasscode={() => {
+            getProfile().then(setProfile);
+          }}
         />
       </div>
-
-      {/* Main Workspace */}
-      <main className="flex-1 flex flex-col h-full min-w-0 relative">
-        <Header
-          conversation={activeConversation}
-          models={models}
-          activeModel={activeModel}
-          onSelectModel={setActiveModelId}
-          onOpenModelManager={() => setIsModelManagerOpen(true)}
-          onToggleSidebar={() => {
-            if (window.innerWidth < 768) {
-              setIsSidebarOpenMobile(!isSidebarOpenMobile);
-            } else {
-              setIsSidebarCollapsedDesktop(!isSidebarCollapsedDesktop);
-            }
-          }}
-          onClearContext={clearContextBoundary}
-          onExportMarkdown={handleExportConversationMarkdown}
-          onTogglePin={() => activeConversationId && togglePin(activeConversationId)}
-          onDeleteConversation={() => activeConversationId && removeConversation(activeConversationId)}
-          isOnline={isOnline}
-        />
-
-        {/* Conversation messages & empty state */}
-        <MessageList
-          messages={messages}
-          models={models}
-          activeModel={activeModel}
-          onOpenModelManager={() => setIsModelManagerOpen(true)}
-          onSelectPrompt={(prompt) => {
-            setComposerInput(prompt);
-          }}
-          onRegenerateMessage={regenerateMessage}
-          onEditUserMessage={editUserMessage}
-        />
-
-        {/* Floating Composer */}
-        <ChatComposer
-          input={composerInput}
-          setInput={setComposerInput}
-          onSend={handleSendMessage}
-          onStop={stopGeneration}
-          generationState={generationState}
-          models={models}
-          activeModel={activeModel}
-          onSelectModel={setActiveModelId}
-          onOpenModelManager={() => setIsModelManagerOpen(true)}
-          enterToSend={settings.enterToSend}
-        />
-      </main>
-
-      {/* Model Manager Modal */}
-      <ModelManagerModal
-        isOpen={isModelManagerOpen}
-        onClose={() => setIsModelManagerOpen(false)}
-        models={models}
-        activeModelId={activeModelId}
-        onSelectModel={setActiveModelId}
-        onCreateModel={createModel}
-        onUpdateModel={updateModel}
-        onDuplicateModel={duplicateModel}
-        onRemoveModel={removeModel}
-        onSetDefaultModel={setDefaultModel}
-      />
-
-      {/* Settings Modal */}
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        theme={theme}
-        onThemeChange={setTheme}
-        settings={settings}
-        onUpdateSettings={handleUpdateSettings}
-        onOpenModelManager={() => setIsModelManagerOpen(true)}
-        onDataReset={handleDataReset}
-      />
-    </div>
+    </>
   );
 };
 

@@ -4,7 +4,8 @@ export interface ModelProfile {
   id: string;
   name: string; // User-defined display name
   modelId: string; // Backend model identifier (e.g., 'llama3.2', 'qwen2.5:7b')
-  baseUrl: string; // e.g., 'http://localhost:11434/v1' or 'http://localhost:1234/v1'
+  baseUrl: string; // e.g., 'http://localhost:11434/v1' or 'https://xxxx.ngrok-free.app/v1'
+  customChatPath?: string; // Optional override path if not '/chat/completions'
   apiKey?: string;
   description?: string;
   systemPrompt?: string;
@@ -17,12 +18,25 @@ export interface ModelProfile {
   updatedAt: number;
 }
 
+export interface UserProfile {
+  username: string; // e.g. "User" or custom name
+  avatarInitials: string; // e.g. "BA" or "U"
+  bio?: string;
+  createdAt: number;
+  updatedAt: number;
+  // Local lock credentials (PBKDF2 via Web Crypto)
+  hasPasscode?: boolean;
+  passcodeSaltHex?: string;
+  passcodeHashHex?: string;
+  passcodeIterations?: number;
+}
+
 export interface Attachment {
   id: string;
   name: string;
   size: number;
   type: string;
-  content: string; // Extracted text or base64 representation
+  content: string; // Extracted text
 }
 
 export interface Message {
@@ -85,6 +99,7 @@ export interface BackupData {
   messages: Message[];
   prompts: PromptPreset[];
   settings?: UserSettings;
+  profile?: UserProfile;
 }
 
 export type GenerationState =
@@ -95,3 +110,17 @@ export type GenerationState =
   | 'complete'
   | 'interrupted'
   | 'error';
+
+// Diagnostic action results
+export interface DiagnosticResult {
+  type: 'discovery' | 'chat' | 'streaming';
+  success: boolean;
+  effectiveUrl: string;
+  httpStatus?: number;
+  elapsedMs: number;
+  message: string;
+  details?: string;
+  discoveredModels?: string[];
+  responseSnippet?: string;
+  nextStep?: string;
+}

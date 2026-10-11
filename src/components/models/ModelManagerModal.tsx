@@ -1,21 +1,30 @@
 import React, { useState } from 'react';
 import {
   AlertCircle,
+  AlertTriangle,
   CheckCircle2,
   Copy,
+  Cpu,
   Edit2,
+  ExternalLink,
   HelpCircle,
   Loader2,
+  Play,
   Plus,
   RefreshCw,
   Sparkles,
+  Terminal,
   Trash2,
+  Zap,
 } from 'lucide-react';
-import type { ModelProfile } from '../../types';
+import type { DiagnosticResult, ModelProfile } from '../../types';
 import {
+  constructEndpointRoutes,
   fetchRemoteModels,
   normalizeBaseUrl,
-  testEndpointConnection,
+  testChatEndpoint,
+  testDiscoveryEndpoint,
+  testStreamingEndpoint,
 } from '../../lib/adapters/openai';
 import { Dialog } from '../ui/Dialog';
 
@@ -50,6 +59,7 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
   // Form states
   const [name, setName] = useState('');
   const [baseUrl, setBaseUrl] = useState('http://localhost:11434/v1');
+  const [customChatPath, setCustomChatPath] = useState('');
   const [modelId, setModelId] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [description, setDescription] = useState('');
@@ -61,18 +71,22 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
   const [isDefault, setIsDefault] = useState(false);
 
   // Diagnostic states
-  const [isTesting, setIsTesting] = useState(false);
-  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [diagnosticLoading, setDiagnosticLoading] = useState<'discovery' | 'chat' | 'streaming' | null>(null);
+  const [diagnosticResult, setDiagnosticResult] = useState<DiagnosticResult | null>(null);
 
   const [isFetchingModels, setIsFetchingModels] = useState(false);
   const [fetchedModels, setFetchedModels] = useState<string[]>([]);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
-  const [showCorsHelp, setShowCorsHelp] = useState(false);
+  const [showAdvancedRoutes, setShowAdvancedRoutes] = useState(false);
+  const [showEndpointHelp, setShowEndpointHelp] = useState(false);
+
+  const routes = constructEndpointRoutes(baseUrl, customChatPath);
 
   const resetForm = () => {
     setName('');
     setBaseUrl('http://localhost:11434/v1');
+    setCustomChatPath('');
     setModelId('');
     setApiKey('');
     setDescription('');
@@ -82,11 +96,12 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
     setMaxTokens(undefined);
     setStreaming(true);
     setIsDefault(models.length === 0);
-    setTestResult(null);
+    setDiagnosticResult(null);
     setFetchedModels([]);
     setFetchError(null);
     setEditingId(null);
     setIsAddingNew(false);
+    setShowAdvancedRoutes(false);
   };
 
   const handleStartAdd = () => {
@@ -98,6 +113,7 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
     setEditingId(m.id);
     setName(m.name);
     setBaseUrl(m.baseUrl);
+    setCustomChatPath(m.customChatPath || '');
     setModelId(m.modelId);
     setApiKey(m.apiKey || '');
     setDescription(m.description || '');
@@ -107,10 +123,11 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
     setMaxTokens(m.maxTokens);
     setStreaming(m.streaming !== false);
     setIsDefault(!!m.isDefault);
-    setTestResult(null);
+    setDiagnosticResult(null);
     setFetchedModels([]);
     setFetchError(null);
     setIsAddingNew(false);
+    setShowAdvancedRoutes(!!m.customChatPath);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -122,6 +139,7 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
     const payload = {
       name: name.trim(),
       baseUrl: normalizedUrl,
+      customChatPath: customChatPath.trim() || undefined,
       modelId: modelId.trim(),
       apiKey: apiKey.trim() ? apiKey.trim() : undefined,
       description: description.trim() || undefined,
@@ -142,18 +160,52 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
     resetForm();
   };
 
-  const handleTestConnection = async () => {
+  // Test Discovery Action
+  const handleTestDiscovery = async () => {
     if (!baseUrl.trim()) return;
-    setIsTesting(true);
-    setTestResult(null);
+    setDiagnosticLoading('discovery');
+    setDiagnosticResult(null);
     try {
-      const result = await testEndpointConnection(baseUrl, apiKey.trim() || undefined);
-      setTestResult(result);
+      const res = await testDiscoveryEndpoint(baseUrl, apiKey.trim() || undefined);
+      setDiagnosticResult(res);
+      if (res.discoveredModels && res.discoveredModels.length > 0) {
+        setFetchedModels(res.discoveredModels);
+        if (!modelId) {
+          setModelId(res.discoveredModels[0]);
+        }
+      }
     } finally {
-      setIsTesting(false);
+      setDiagnosticLoading(null);
     }
   };
 
+  // Test Chat Action (Real minimal inference test)
+  const handleTestChat = async () => {
+    if (!baseUrl.trim() || !modelId.trim()) return;
+    setDiagnosticLoading('chat');
+    setDiagnosticResult(null);
+    try {
+      const res = await testChatEndpoint(baseUrl, modelId, apiKey.trim() || undefined);
+      setDiagnosticResult(res);
+    } finally {
+      setDiagnosticLoading(null);
+    }
+  };
+
+  // Test Streaming Action
+  const handleTestStreaming = async () => {
+    if (!baseUrl.trim() || !modelId.trim()) return;
+    setDiagnosticLoading('streaming');
+    setDiagnosticResult(null);
+    try {
+      const res = await testStreamingEndpoint(baseUrl, modelId, apiKey.trim() || undefined);
+      setDiagnosticResult(res);
+    } finally {
+      setDiagnosticLoading(null);
+    }
+  };
+
+  // Quick Fetch Models
   const handleFetchModels = async () => {
     if (!baseUrl.trim()) return;
     setIsFetchingModels(true);
@@ -180,21 +232,20 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title="Model Profiles"
-      description="Connect OpenAI-compatible model backends (Ollama, LM Studio, llama.cpp, vLLM)."
+      description="Connect and test your OpenAI-compatible inference backends."
       maxWidth="max-w-2xl"
     >
       <div className="space-y-6">
-        {/* If not in add/edit mode, show list of models */}
         {!isFormActive ? (
           <div>
             <div className="flex items-center justify-between mb-4">
-              <span className="text-xs text-muted-foreground">
+              <span className="text-xs text-muted-foreground font-sans">
                 {models.length} configured profile{models.length !== 1 ? 's' : ''}
               </span>
               <button
                 type="button"
                 onClick={handleStartAdd}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-opacity cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:opacity-90 transition cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add model</span>
@@ -202,16 +253,16 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
             </div>
 
             {models.length === 0 ? (
-              <div className="text-center py-10 px-4 rounded-lg border border-dashed border-border bg-muted/20">
-                <Sparkles className="w-8 h-8 mx-auto text-muted-foreground/60 mb-2" />
+              <div className="text-center py-10 px-4 rounded-xl border border-dashed border-border bg-muted/20">
+                <Cpu className="w-8 h-8 mx-auto text-primary mb-2 opacity-80" />
                 <h3 className="text-sm font-medium text-foreground">No model profiles configured</h3>
-                <p className="text-xs text-muted-foreground max-w-sm mx-auto mt-1 mb-4">
-                  Bamboo does not preload models. Connect your local or remote OpenAI-compatible endpoint to begin.
+                <p className="text-xs text-muted-foreground max-w-sm mx-auto mt-1 mb-4 leading-relaxed font-sans">
+                  Bamboo starts completely empty. Connect your local Ollama, LM Studio, llama-server, or remote tunnel to start chatting.
                 </p>
                 <button
                   type="button"
                   onClick={handleStartAdd}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-opacity cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:opacity-90 transition cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Configure your first model</span>
@@ -256,7 +307,7 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
                           <button
                             type="button"
                             onClick={() => onSelectModel(m.id)}
-                            className="px-2 py-1 text-xs rounded hover:bg-muted text-foreground transition-colors cursor-pointer"
+                            className="px-2 py-1 text-xs rounded hover:bg-muted text-foreground transition cursor-pointer"
                             title="Set as active chat model"
                           >
                             Select
@@ -265,7 +316,7 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
                         <button
                           type="button"
                           onClick={() => handleStartEdit(m)}
-                          className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                          className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition cursor-pointer"
                           title="Edit profile"
                           aria-label="Edit model profile"
                         >
@@ -274,7 +325,7 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
                         <button
                           type="button"
                           onClick={() => onDuplicateModel(m.id)}
-                          className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                          className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition cursor-pointer"
                           title="Duplicate profile"
                           aria-label="Duplicate model profile"
                         >
@@ -283,7 +334,7 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
                         <button
                           type="button"
                           onClick={() => onRemoveModel(m.id)}
-                          className="p-1.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
+                          className="p-1.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition cursor-pointer"
                           title="Delete profile"
                           aria-label="Delete model profile"
                         >
@@ -297,22 +348,22 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
             )}
           </div>
         ) : (
-          /* Add / Edit Form */
+          /* Profile Add/Edit Form */
           <form onSubmit={handleSave} className="space-y-4">
             <div className="flex items-center justify-between pb-2 border-b border-border">
               <h3 className="text-sm font-semibold text-foreground">
-                {editingId ? 'Edit Model Profile' : 'Add Model Profile'}
+                {editingId ? 'Edit Model Profile' : 'Configure Model Profile'}
               </h3>
               <button
                 type="button"
                 onClick={resetForm}
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                className="text-xs text-muted-foreground hover:text-foreground transition cursor-pointer"
               >
                 Back to list
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
               <div>
                 <label className="block text-xs font-medium text-foreground mb-1">
                   Display Name <span className="text-destructive">*</span>
@@ -320,7 +371,7 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Ollama Llama 3"
+                  placeholder="e.g. Local Llama 3 or Remote Qwen"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="w-full px-3 py-1.5 text-xs rounded-md border border-border bg-input/20 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
@@ -334,15 +385,70 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
                 <input
                   type="text"
                   required
-                  placeholder="http://localhost:11434/v1"
+                  placeholder="http://localhost:11434/v1 or https://xxxx.ngrok-free.app/v1"
                   value={baseUrl}
                   onChange={(e) => setBaseUrl(e.target.value)}
                   className="w-full px-3 py-1.5 text-xs rounded-md border border-border bg-input/20 text-foreground placeholder:text-muted-foreground font-mono focus:outline-none focus:ring-1 focus:ring-ring"
                 />
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  Format: <code className="font-mono">http://localhost:11434/v1</code> or <code className="font-mono">https://xxxx.ngrok-free.app/v1</code>
+                </p>
               </div>
             </div>
 
-            {/* Model ID & Fetch Remote Models */}
+            {/* Effective Endpoint Routes Preview & Diagnostic Box */}
+            <div className="p-3 rounded-lg border border-border/80 bg-muted/25 space-y-2 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="font-medium text-foreground text-[11px] uppercase tracking-wider font-mono">
+                  Effective Route Construction
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowAdvancedRoutes(!showAdvancedRoutes)}
+                  className="text-[11px] text-primary hover:underline cursor-pointer"
+                >
+                  {showAdvancedRoutes ? 'Hide custom route' : 'Customize route'}
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px] font-mono">
+                <div className="p-2 rounded bg-card border border-border/40">
+                  <span className="text-muted-foreground block text-[10px]">Model Discovery (GET):</span>
+                  <span className="text-foreground truncate block">{routes.discoveryUrl || 'None'}</span>
+                </div>
+                <div className="p-2 rounded bg-card border border-border/40">
+                  <span className="text-muted-foreground block text-[10px]">Chat Completion (POST):</span>
+                  <span className="text-foreground truncate block">{routes.chatUrl || 'None'}</span>
+                </div>
+              </div>
+
+              {showAdvancedRoutes && (
+                <div className="pt-2 border-t border-border/40">
+                  <label className="block text-[11px] font-medium text-foreground mb-1">
+                    Custom Chat Path Override <span className="text-muted-foreground">(Optional, default: /chat/completions)</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="/chat/completions"
+                    value={customChatPath}
+                    onChange={(e) => setCustomChatPath(e.target.value)}
+                    className="w-full px-2.5 py-1 text-xs rounded border border-border bg-input/20 text-foreground font-mono"
+                  />
+                </div>
+              )}
+
+              {/* Mixed Content Warning Banner */}
+              {routes.isMixedContentRisk && (
+                <div className="p-2 rounded bg-destructive/10 border border-destructive/20 text-destructive text-[11px] flex items-start gap-1.5">
+                  <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                  <span>
+                    Mixed Content Warning: You are loading Bamboo over HTTPS, but this endpoint uses remote HTTP. Browsers block remote HTTP requests from HTTPS sites. Use an HTTPS ngrok/tunnel or test against localhost.
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Model ID Selection & Fetching */}
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="text-xs font-medium text-foreground">
@@ -352,7 +458,8 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
                   type="button"
                   onClick={handleFetchModels}
                   disabled={isFetchingModels || !baseUrl.trim()}
-                  className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline transition cursor-pointer disabled:opacity-50"
+                  className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline cursor-pointer disabled:opacity-50"
+                  title="Query GET /v1/models"
                 >
                   {isFetchingModels ? (
                     <Loader2 className="w-3 h-3 animate-spin" />
@@ -363,47 +470,44 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
                 </button>
               </div>
 
-              {fetchedModels.length > 0 ? (
-                <div className="space-y-1">
-                  <select
-                    value={modelId}
-                    onChange={(e) => setModelId(e.target.value)}
-                    className="w-full px-3 py-1.5 text-xs rounded-md border border-border bg-card text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-ring"
-                  >
-                    <option value="">Select a discovered model...</option>
-                    {fetchedModels.map((id) => (
-                      <option key={id} value={id}>
-                        {id}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="text-[11px] text-muted-foreground">
-                    Or type manually below if you prefer.
-                  </p>
-                </div>
-              ) : null}
+              {fetchedModels.length > 0 && (
+                <select
+                  value={modelId}
+                  onChange={(e) => setModelId(e.target.value)}
+                  className="w-full mb-1.5 px-3 py-1.5 text-xs rounded-md border border-border bg-card text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-ring"
+                >
+                  <option value="">Select discovered model...</option>
+                  {fetchedModels.map((id) => (
+                    <option key={id} value={id}>
+                      {id}
+                    </option>
+                  ))}
+                </select>
+              )}
 
               <input
                 type="text"
                 required
-                placeholder="e.g. llama3.2, mistral:7b, gpt-4o"
+                placeholder="e.g. llama3.2, mistral:7b, gpt-4o, qwen2.5:7b"
                 value={modelId}
                 onChange={(e) => setModelId(e.target.value)}
-                className="w-full mt-1 px-3 py-1.5 text-xs rounded-md border border-border bg-input/20 text-foreground placeholder:text-muted-foreground font-mono focus:outline-none focus:ring-1 focus:ring-ring"
+                className="w-full px-3 py-1.5 text-xs rounded-md border border-border bg-input/20 text-foreground placeholder:text-muted-foreground font-mono focus:outline-none focus:ring-1 focus:ring-ring"
               />
 
               {fetchError && (
-                <p className="text-[11px] text-destructive mt-1 flex items-start gap-1">
-                  <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                  <span>{fetchError}</span>
+                <p className="text-[11px] text-muted-foreground mt-1 flex items-start gap-1">
+                  <AlertCircle className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+                  <span>
+                    Note: {fetchError} (Model discovery is optional; you can enter your model ID manually and test chat inference below).
+                  </span>
                 </p>
               )}
             </div>
 
-            {/* Optional API Key */}
+            {/* API Key */}
             <div>
               <label className="block text-xs font-medium text-foreground mb-1">
-                API Key <span className="text-muted-foreground">(Optional for local models)</span>
+                API Key <span className="text-muted-foreground">(Optional for local endpoints)</span>
               </label>
               <input
                 type="password"
@@ -417,18 +521,18 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
             {/* System Prompt */}
             <div>
               <label className="block text-xs font-medium text-foreground mb-1">
-                System Prompt <span className="text-muted-foreground">(Optional)</span>
+                Profile System Prompt <span className="text-muted-foreground">(Optional)</span>
               </label>
               <textarea
                 rows={2}
-                placeholder="e.g. You are a helpful, thoughtful software engineering partner."
+                placeholder="e.g. You are a helpful, thoughtful coding and research assistant."
                 value={systemPrompt}
                 onChange={(e) => setSystemPrompt(e.target.value)}
                 className="w-full px-3 py-1.5 text-xs rounded-md border border-border bg-input/20 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-none"
               />
             </div>
 
-            {/* Inference Parameters */}
+            {/* Sliders */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pt-1">
               <div>
                 <label className="block text-[11px] font-medium text-foreground mb-1">
@@ -462,7 +566,7 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
 
               <div>
                 <label className="block text-[11px] font-medium text-foreground mb-1">
-                  Max Tokens
+                  Max Output Tokens
                 </label>
                 <input
                   type="number"
@@ -500,43 +604,88 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
               </label>
             </div>
 
-            {/* Test Connection Diagnostic */}
-            <div className="pt-2 border-t border-border flex flex-col gap-2">
+            {/* SEPARATE DIAGNOSTIC ACTIONS (Section 8 of prompt) */}
+            <div className="pt-3 border-t border-border space-y-2.5">
               <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-foreground">
+                  Connection & Inference Diagnostics
+                </span>
                 <button
                   type="button"
-                  onClick={handleTestConnection}
-                  disabled={isTesting || !baseUrl.trim()}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-border bg-muted/40 hover:bg-muted text-foreground transition-colors cursor-pointer disabled:opacity-50"
+                  onClick={() => setShowEndpointHelp(!showEndpointHelp)}
+                  className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground cursor-pointer"
                 >
-                  {isTesting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
-                  <span>Test Connection</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setShowCorsHelp(!showCorsHelp)}
-                  className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition cursor-pointer"
-                >
-                  <HelpCircle className="w-3 h-3" />
-                  <span>CORS & Endpoint Guide</span>
+                  <HelpCircle className="w-3.5 h-3.5 text-primary" />
+                  <span>Setup Guide</span>
                 </button>
               </div>
 
-              {testResult && (
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleTestDiscovery}
+                  disabled={diagnosticLoading !== null || !baseUrl.trim()}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-border bg-card hover:bg-muted text-foreground transition cursor-pointer disabled:opacity-50"
+                  title="Test GET /v1/models endpoint"
+                >
+                  {diagnosticLoading === 'discovery' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5 text-primary" />}
+                  <span>Test Discovery (/models)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleTestChat}
+                  disabled={diagnosticLoading !== null || !baseUrl.trim() || !modelId.trim()}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-border bg-card hover:bg-muted text-foreground transition cursor-pointer disabled:opacity-50"
+                  title="Sends a minimal 'Ping' prompt to verify real chat completion"
+                >
+                  {diagnosticLoading === 'chat' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5 text-primary" />}
+                  <span>Test Chat Inference</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleTestStreaming}
+                  disabled={diagnosticLoading !== null || !baseUrl.trim() || !modelId.trim()}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-border bg-card hover:bg-muted text-foreground transition cursor-pointer disabled:opacity-50"
+                  title="Tests incremental SSE streaming event delivery"
+                >
+                  {diagnosticLoading === 'streaming' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5 text-primary" />}
+                  <span>Test Streaming (SSE)</span>
+                </button>
+              </div>
+
+              {/* Diagnostic Result Box */}
+              {diagnosticResult && (
                 <div
-                  className={`p-2.5 rounded-md text-xs flex items-start gap-2 ${
-                    testResult.success
+                  className={`p-3 rounded-lg text-xs space-y-1.5 ${
+                    diagnosticResult.success
                       ? 'bg-primary/10 border border-primary/30 text-foreground'
                       : 'bg-destructive/10 border border-destructive/30 text-destructive'
                   }`}
                 >
-                  {testResult.success ? (
-                    <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                  ) : (
-                    <AlertCircle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
-                  )}
-                  <span className="leading-relaxed">{testResult.message}</span>
+                  <div className="flex items-start gap-2">
+                    {diagnosticResult.success ? (
+                      <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                    ) : (
+                      <AlertCircle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
+                    )}
+                    <div className="flex-1 space-y-1 leading-relaxed">
+                      <div className="font-semibold">{diagnosticResult.message}</div>
+                      {diagnosticResult.details && (
+                        <div className="text-[11px] opacity-90">{diagnosticResult.details}</div>
+                      )}
+                      <div className="text-[10px] opacity-75 font-mono pt-0.5">
+                        Route: {diagnosticResult.effectiveUrl} · Latency: {diagnosticResult.elapsedMs}ms
+                        {diagnosticResult.httpStatus ? ` · HTTP ${diagnosticResult.httpStatus}` : ''}
+                      </div>
+                      {diagnosticResult.nextStep && (
+                        <div className="text-[11px] font-medium pt-1 text-foreground/90">
+                          Next step: {diagnosticResult.nextStep}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -546,13 +695,13 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
               <button
                 type="button"
                 onClick={resetForm}
-                className="px-3 py-1.5 text-xs font-medium rounded-md border border-border hover:bg-muted text-foreground transition-colors cursor-pointer"
+                className="px-3.5 py-1.5 text-xs font-medium rounded-md border border-border hover:bg-muted text-foreground transition cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-1.5 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-opacity cursor-pointer"
+                className="px-4 py-1.5 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:opacity-90 transition cursor-pointer"
               >
                 {editingId ? 'Save Changes' : 'Create Profile'}
               </button>
@@ -560,32 +709,43 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
           </form>
         )}
 
-        {/* CORS & Local Endpoints Guidance */}
-        {(showCorsHelp || models.length === 0) && (
-          <div className="p-3 rounded-lg border border-border bg-muted/30 text-xs space-y-2">
+        {/* Backend & CORS Guidance */}
+        {showEndpointHelp && (
+          <div className="p-3.5 rounded-xl border border-border bg-card text-xs space-y-2.5">
             <div className="font-semibold text-foreground flex items-center gap-1.5">
-              <HelpCircle className="w-3.5 h-3.5 text-primary" />
-              <span>Connecting Local Models & Browser CORS</span>
+              <Terminal className="w-4 h-4 text-primary" />
+              <span>Backend Setup & CORS Configuration Guide</span>
             </div>
             <p className="text-muted-foreground text-[11px] leading-relaxed">
-              Because Bamboo runs in your browser, your local model server must allow browser cross-origin requests (CORS):
+              Because Bamboo is a browser application, backend model servers must permit cross-origin requests:
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px] pt-1">
-              <div className="p-2 rounded bg-card border border-border/50">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px]">
+              <div className="p-2.5 rounded-lg bg-muted/40 border border-border/50">
                 <span className="font-semibold text-foreground block mb-0.5">Ollama:</span>
-                <code className="text-muted-foreground font-mono">OLLAMA_ORIGINS="*" ollama serve</code>
+                <code className="text-primary font-mono text-[10px] block mb-1">OLLAMA_ORIGINS="*" ollama serve</code>
+                <span className="text-muted-foreground text-[10px]">Default URL: http://localhost:11434/v1</span>
               </div>
-              <div className="p-2 rounded bg-card border border-border/50">
-                <span className="font-semibold text-foreground block mb-0.5">llama-server:</span>
-                <code className="text-muted-foreground font-mono">./llama-server --cors -m model.gguf</code>
+
+              <div className="p-2.5 rounded-lg bg-muted/40 border border-border/50">
+                <span className="font-semibold text-foreground block mb-0.5">llama.cpp / llama-server:</span>
+                <code className="text-primary font-mono text-[10px] block mb-1">./llama-server --cors -m model.gguf --port 8080</code>
+                <span className="text-muted-foreground text-[10px]">Default URL: http://localhost:8080/v1</span>
               </div>
-              <div className="p-2 rounded bg-card border border-border/50">
+
+              <div className="p-2.5 rounded-lg bg-muted/40 border border-border/50">
                 <span className="font-semibold text-foreground block mb-0.5">LM Studio:</span>
-                <span className="text-muted-foreground">Enable "Cross-Origin-Resource-Sharing (CORS)" in Local Server tab.</span>
+                <span className="text-muted-foreground text-[10px] block mb-1">
+                  Open Local Server tab → Check "Enable CORS"
+                </span>
+                <span className="text-muted-foreground text-[10px]">Default URL: http://localhost:1234/v1</span>
               </div>
-              <div className="p-2 rounded bg-card border border-border/50">
-                <span className="font-semibold text-foreground block mb-0.5">vLLM:</span>
-                <code className="text-muted-foreground font-mono">vllm serve ... --allowed-origins "*"</code>
+
+              <div className="p-2.5 rounded-lg bg-muted/40 border border-border/50">
+                <span className="font-semibold text-foreground block mb-0.5">ngrok Remote Tunnel:</span>
+                <code className="text-primary font-mono text-[10px] block mb-1">ngrok http 11434</code>
+                <span className="text-muted-foreground text-[10px]">
+                  Use the HTTPS tunnel URL (e.g. https://xyz.ngrok-free.app/v1). Bamboo automatically includes header to skip warning page.
+                </span>
               </div>
             </div>
           </div>
