@@ -1,8 +1,18 @@
-# bamboo
+<div align="center">
+  <pre align="center" style="color: #8d9d4f;">
+   ▄▄                            ▄▄                           
+   ██                            ██                           
+   ██▄███▄    ▄█████▄  ████▄██▄  ██▄███▄    ▄████▄    ▄████▄  
+   ██▀  ▀██   ▀ ▄▄▄██  ██ ██ ██  ██▀  ▀██  ██▀  ▀██  ██▀  ▀██ 
+   ██    ██  ▄██▀▀▀██  ██ ██ ██  ██    ██  ██    ██  ██    ██ 
+  ███▄▄██▀  ██▄▄▄███  ██ ██ ██  ███▄▄██▀  ▀██▄▄██▀  ▀██▄▄██▀
+▀▀ ▀▀▀     ▀▀▀▀ ▀▀  ▀▀ ▀▀ ▀▀  ▀▀ ▀▀▀      ▀▀▀▀      ▀▀▀▀
+  </pre>
+</div>
 
-> A polished, private, local-first AI chat workspace inspired by Claude, ChatGPT, and Open WebUI.
+> A polished, private, local-first AI chat workspace inspired by Claude and OpenWebUI.
 
-bamboo is a lightweight, high-performance Progressive Web App (PWA) built from scratch. It runs entirely in your browser with local persistence in IndexedDB and connects directly to your own OpenAI-compatible model endpoints (Ollama, LM Studio, llama-server, vLLM, or remote compatible inference APIs).
+bamboo is a lightweight, high-performance Progressive Web App. It runs entirely in your browser with local persistence in IndexedDB and connects directly to your own OpenAI-compatible model endpoints (Ollama, LM Studio, llama-server, vLLM, or remote compatible inference APIs).
 
 ---
 
@@ -97,11 +107,3 @@ In Bamboo:
 - **Base URL:** `http://localhost:8080/v1`
 
 ---
-
-## Vercel Deployment Settings
-
-Deploying to Vercel as a static single-page application:
-- **Framework Preset:** Vite
-- **Build Command:** `npm run build`
-- **Output Directory:** `dist`
-- **SPA Rewrites:** Configured in `vercel.json` (`/(.*) -> /index.html`).
