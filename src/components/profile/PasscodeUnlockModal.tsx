@@ -68,7 +68,7 @@ export const PasscodeUnlockModal: React.FC<PasscodeUnlockModalProps> = ({
           <Lock className="w-5 h-5" />
         </div>
 
-        <h2 id="lock-title" className="text-base font-serif font-semibold text-foreground mb-1">
+        <h2 id="lock-title" className="text-base font-semibold text-foreground mb-1">
           workspace locked
         </h2>
         <p className="text-xs text-muted-foreground mb-5">

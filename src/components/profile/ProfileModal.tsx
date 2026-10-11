@@ -109,7 +109,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
         {/* Profile Info Form */}
         <form onSubmit={handleSaveInfo} className="space-y-3">
           <div className="flex items-center gap-3 pb-3 border-b border-border">
-            <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/30 text-primary font-serif font-bold text-base flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/30 text-primary font-bold text-base flex items-center justify-center shrink-0">
               {avatarInitials.slice(0, 2).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">

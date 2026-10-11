@@ -1,12 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import {
-  ArrowUp,
-  Paperclip,
-  Square,
-  X,
-} from 'lucide-react';
+import { ArrowUp, Paperclip, Square, X } from 'lucide-react';
 import type { Attachment, GenerationState, ModelProfile } from '../../types';
-import { ModelSelector } from '../models/ModelSelector';
 
 interface ChatComposerProps {
   input: string;
@@ -16,10 +10,12 @@ interface ChatComposerProps {
   generationState: GenerationState;
   models: ModelProfile[];
   activeModel: ModelProfile | null;
-  onSelectModel: (id: string) => void;
   onOpenModelManager: () => void;
   enterToSend?: boolean;
 }
+
+const MIN_HEIGHT = 40;
+const MAX_HEIGHT = 200;
 
 export const ChatComposer: React.FC<ChatComposerProps> = ({
   input,
@@ -29,7 +25,6 @@ export const ChatComposer: React.FC<ChatComposerProps> = ({
   generationState,
   models,
   activeModel,
-  onSelectModel,
   onOpenModelManager,
   enterToSend = true,
 }) => {
@@ -39,14 +34,34 @@ export const ChatComposer: React.FC<ChatComposerProps> = ({
 
   const isGenerating = generationState === 'generating' || generationState === 'connecting';
 
+  // Hint: "Reply to <model display name>..." or a get-started prompt when no model is selected
+  const placeholder = activeModel ? `Reply to ${activeModel.name}...` : 'Get started with bamboo';
+
   // Auto-resize textarea height
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = 'auto';
-    const newHeight = Math.min(el.scrollHeight, 220);
-    el.style.height = `${Math.max(newHeight, 48)}px`;
+    el.style.height = `${Math.min(Math.max(el.scrollHeight, MIN_HEIGHT), MAX_HEIGHT)}px`;
   }, [input]);
+
+  const handleSend = () => {
+    if (isGenerating) return;
+    if (!input.trim() && attachments.length === 0) return;
+    if (!activeModel) {
+      onOpenModelManager();
+      return;
+    }
+
+    onSend(input, attachments.length > 0 ? attachments : undefined);
+    setInput('');
+    setAttachments([]);
+
+    if (textareaRef.current) {
+      textareaRef.current.style.height = `${MIN_HEIGHT}px`;
+      textareaRef.current.focus();
+    }
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.nativeEvent.isComposing) return;
@@ -62,29 +77,9 @@ export const ChatComposer: React.FC<ChatComposerProps> = ({
         e.preventDefault();
         handleSend();
       }
-    } else {
-      if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        handleSend();
-      }
-    }
-  };
-
-  const handleSend = () => {
-    if (isGenerating) return;
-    if (!input.trim() && attachments.length === 0) return;
-    if (!activeModel && models.length === 0) {
-      onOpenModelManager();
-      return;
-    }
-
-    onSend(input, attachments.length > 0 ? attachments : undefined);
-    setInput('');
-    setAttachments([]);
-
-    if (textareaRef.current) {
-      textareaRef.current.style.height = '48px';
-      textareaRef.current.focus();
+    } else if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      handleSend();
     }
   };
 
@@ -125,51 +120,35 @@ export const ChatComposer: React.FC<ChatComposerProps> = ({
   const canSend = (input.trim().length > 0 || attachments.length > 0) && !isGenerating;
 
   return (
-    <div className="w-full max-w-3xl mx-auto px-4 pb-3 md:pb-5 pt-1">
-      <div className="relative rounded-2xl border border-border/80 bg-card shadow-xs transition-all focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/10">
-        {/* Attachment chips preview */}
-        {attachments.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 px-3 pt-2.5 pb-1 border-b border-border/30">
-            {attachments.map((att) => (
-              <div
-                key={att.id}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] bg-muted/60 text-muted-foreground border border-border/40 font-mono"
-              >
-                <Paperclip className="w-3 h-3 text-primary" />
-                <span className="truncate max-w-[180px]">{att.name}</span>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveAttachment(att.id)}
-                  className="p-0.5 rounded hover:text-foreground text-muted-foreground transition cursor-pointer"
-                  title="Remove attachment"
-                  aria-label="Remove attachment"
+    // Fades into the chat; respects the iOS home-indicator inset
+    <div className="w-full shrink-0 bg-linear-to-t from-background from-65% to-transparent px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] sm:px-4">
+      <div className="mx-auto w-full max-w-3xl">
+        <div className="rounded-[28px] border border-border/15 bg-card shadow-sm transition-colors focus-within:border-border/30">
+          {/* Attachment chips */}
+          {attachments.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 px-4 pt-3">
+              {attachments.map((att) => (
+                <div
+                  key={att.id}
+                  className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-border/15 bg-muted py-1 pl-2.5 pr-1.5 text-xs text-foreground"
                 >
-                  <X className="w-3 h-3" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
+                  <Paperclip className="h-3 w-3 shrink-0 text-muted-foreground" />
+                  <span className="max-w-[160px] truncate">{att.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveAttachment(att.id)}
+                    className="rounded-full p-0.5 text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground cursor-pointer"
+                    title="Remove attachment"
+                    aria-label="Remove attachment"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
-        {/* Textarea */}
-        <textarea
-          ref={textareaRef}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={
-            models.length === 0
-              ? 'Connect a model to start conversation...'
-              : 'Reply to Bamboo...'
-          }
-          rows={1}
-          className="w-full px-4 pt-3 pb-2 text-sm text-foreground placeholder:text-muted-foreground/70 bg-transparent resize-none focus:outline-none leading-relaxed font-sans"
-        />
-
-        {/* Toolbar */}
-        <div className="flex items-center justify-between px-3 pb-2.5 pt-0.5">
-          {/* Left tools: Attachment & Model Selector */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-end gap-1.5 p-2">
             <input
               type="file"
               ref={fileInputRef}
@@ -181,59 +160,54 @@ export const ChatComposer: React.FC<ChatComposerProps> = ({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/40 transition cursor-pointer"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground cursor-pointer"
               title="Attach text or code file"
               aria-label="Attach file"
             >
-              <Paperclip className="w-4 h-4" />
+              <Paperclip className="h-5 w-5" />
             </button>
 
-            <ModelSelector
-              models={models}
-              activeModel={activeModel}
-              onSelectModel={onSelectModel}
-              onOpenModelManager={onOpenModelManager}
-              compact
+            <textarea
+              ref={textareaRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={placeholder}
+              rows={1}
+              aria-label="Message"
+              // 16px on small screens stops iOS from zooming into the field
+              className="min-h-10 min-w-0 flex-1 resize-none bg-transparent px-1 py-2 text-base leading-6 text-foreground placeholder:text-muted-foreground focus:outline-none md:text-[15px]"
             />
-          </div>
 
-          {/* Right tool: Send or Stop button */}
-          <div className="flex items-center gap-1.5">
             {isGenerating ? (
               <button
                 type="button"
                 onClick={onStop}
-                className="w-8 h-8 rounded-lg bg-destructive text-destructive-foreground hover:opacity-90 transition shadow-xs cursor-pointer flex items-center justify-center"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-secondary-foreground transition-opacity hover:opacity-80 cursor-pointer"
                 title="Stop generation (Esc)"
                 aria-label="Stop generation"
               >
-                <Square className="w-3.5 h-3.5 fill-current" />
+                <Square className="h-3.5 w-3.5 fill-current" />
               </button>
             ) : (
               <button
                 type="button"
                 onClick={handleSend}
                 disabled={!canSend}
-                className={`w-8 h-8 rounded-lg transition-all shadow-xs flex items-center justify-center cursor-pointer ${
-                  canSend
-                    ? 'bg-primary text-primary-foreground hover:opacity-90'
-                    : 'bg-muted/50 text-muted-foreground/30 cursor-not-allowed opacity-60'
-                }`}
-                title={enterToSend ? 'Send message (Enter)' : 'Send message (Cmd+Enter)'}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-secondary-foreground transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100 cursor-pointer"
+                title={enterToSend ? 'Send message (Enter)' : 'Send message (Ctrl/Cmd+Enter)'}
                 aria-label="Send message"
               >
-                <ArrowUp className="w-4 h-4 stroke-[2.5]" />
+                <ArrowUp className="h-5 w-5 stroke-[2.5]" />
               </button>
             )}
           </div>
         </div>
-      </div>
 
-      <div className="flex items-center justify-between px-2 pt-1 text-[11px] text-muted-foreground/60 select-none font-sans">
-        <span>
-          {enterToSend ? 'Enter to send · Shift+Enter for newline' : 'Cmd+Enter to send'}
-        </span>
-        <span>Local-first · Offline capable</span>
+        <p className="mt-2 hidden select-none text-center text-xs text-muted-foreground sm:block">
+          {enterToSend ? 'Enter to send · Shift+Enter for a new line' : 'Ctrl/Cmd+Enter to send'}
+          {' · '}Chats are stored locally in your browser
+        </p>
       </div>
     </div>
   );

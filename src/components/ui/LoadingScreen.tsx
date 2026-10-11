@@ -60,7 +60,7 @@ export const LoadingScreen: React.FC<LoadingScreenProps> = ({
         </div>
 
         {/* Wordmark */}
-        <h1 className="font-serif font-semibold text-xl tracking-tight text-foreground lowercase mb-1">
+        <h1 className="font-semibold text-xl tracking-tight text-foreground lowercase mb-1">
           bamboo
         </h1>
         <p className="text-xs text-muted-foreground font-sans">

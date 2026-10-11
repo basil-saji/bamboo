@@ -44,12 +44,15 @@ export const MessageList: React.FC<MessageListProps> = ({
 
   if (messages.length === 0) {
     return (
-      <EmptyChatState
-        models={models}
-        activeModel={activeModel}
-        onOpenModelManager={onOpenModelManager}
-        onSelectPrompt={onSelectPrompt}
-      />
+      // Reserve the glass header's height so the content centres in the visible area
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto pt-[var(--header-h)]">
+        <EmptyChatState
+          models={models}
+          activeModel={activeModel}
+          onOpenModelManager={onOpenModelManager}
+          onSelectPrompt={onSelectPrompt}
+        />
+      </div>
     );
   }
 
@@ -66,7 +69,7 @@ export const MessageList: React.FC<MessageListProps> = ({
     <div
       ref={containerRef}
       onScroll={handleScroll}
-      className="flex-1 overflow-y-auto px-4 md:px-6 py-6"
+      className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-4 pt-[calc(var(--header-h)+1rem)] md:px-6"
     >
       <div className="max-w-3xl mx-auto flex flex-col justify-end min-h-full">
         {messages.map((m) => (

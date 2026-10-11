@@ -42,39 +42,35 @@ export const Dialog: React.FC<DialogProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/20 backdrop-blur-xs transition-opacity"
+      className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40 p-0 backdrop-blur-sm sm:items-center sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="dialog-title"
     >
-      <div
-        className="fixed inset-0"
-        onClick={onClose}
-        aria-hidden="true"
-      />
+      <div className="fixed inset-0" onClick={onClose} aria-hidden="true" />
       <div
         ref={dialogRef}
-        className={`relative w-full ${maxWidth} max-h-[90vh] flex flex-col rounded-lg border border-border bg-card text-card-foreground shadow-xl overflow-hidden z-10 animate-in fade-in-0 zoom-in-95 duration-150`}
+        className={`bamboo-pop relative z-10 flex max-h-[92dvh] w-full ${maxWidth} flex-col overflow-hidden rounded-t-3xl border border-border/15 bg-card text-card-foreground shadow-2xl sm:max-h-[90dvh] sm:rounded-3xl`}
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card">
-          <div>
-            <h2 id="dialog-title" className="text-base font-semibold font-serif text-foreground">
+        <div className="flex items-start justify-between gap-4 border-b border-border/10 px-5 py-4 sm:px-6">
+          <div className="min-w-0">
+            <h2 id="dialog-title" className="text-base font-semibold text-foreground">
               {title}
             </h2>
-            {description && (
-              <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
-            )}
+            {description && <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>}
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+            className="-mr-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground cursor-pointer"
             aria-label="Close dialog"
           >
-            <X className="w-4 h-4" />
+            <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto p-6">{children}</div>
+        <div className="flex-1 overflow-y-auto overscroll-contain p-5 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))] sm:p-6">
+          {children}
+        </div>
       </div>
     </div>
   );

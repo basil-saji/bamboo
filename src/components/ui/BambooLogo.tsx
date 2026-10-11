@@ -73,7 +73,7 @@ export const BambooLogo: React.FC<BambooLogoProps> = ({
         />
       </svg>
       {showText && (
-        <span className="font-serif font-semibold text-lg tracking-tight text-foreground lowercase">
+        <span className="text-lg font-semibold tracking-tight text-foreground lowercase">
           bamboo
         </span>
       )}

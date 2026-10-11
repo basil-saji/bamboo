@@ -1,14 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import type { ThemeMode, UserProfile } from '../../types';
-import {
-  ChevronUp,
-  Cpu,
-  Lock,
-  Moon,
-  Settings,
-  Sun,
-  User,
-} from 'lucide-react';
+import { ChevronsUpDown, Cpu, Lock, Monitor, Moon, Settings, Sun, User } from 'lucide-react';
+import { FloatingPanel } from '../ui/FloatingPanel';
 
 interface ProfileMenuProps {
   profile: UserProfile;
@@ -20,6 +13,9 @@ interface ProfileMenuProps {
   onLockWorkspace?: () => void;
 }
 
+const menuItem =
+  'flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-muted cursor-pointer';
+
 export const ProfileMenu: React.FC<ProfileMenuProps> = ({
   profile,
   theme,
@@ -30,149 +26,100 @@ export const ProfileMenu: React.FC<ProfileMenuProps> = ({
   onLockWorkspace,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen]);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   const initials = profile.avatarInitials || profile.username.slice(0, 2).toUpperCase() || 'U';
 
-  const toggleTheme = () => {
+  const cycleTheme = () => {
     if (theme === 'light') onThemeChange('dark');
     else if (theme === 'dark') onThemeChange('system');
     else onThemeChange('light');
   };
 
+  const ThemeIcon = theme === 'dark' ? Moon : theme === 'light' ? Sun : Monitor;
+
+  const run = (fn: () => void) => () => {
+    setIsOpen(false);
+    fn();
+  };
+
   return (
-    <div className="relative w-full" ref={menuRef}>
-      {/* Trigger Button */}
+    <>
       <button
+        ref={triggerRef}
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-sidebar-accent/50 text-sidebar-foreground transition-colors cursor-pointer group"
-        aria-haspopup="true"
+        onClick={() => setIsOpen((v) => !v)}
+        className="flex w-full items-center justify-between gap-2 rounded-xl p-2 text-sidebar-foreground transition-colors hover:bg-sidebar-accent data-[open=true]:bg-sidebar-accent cursor-pointer"
+        data-open={isOpen}
+        aria-haspopup="menu"
         aria-expanded={isOpen}
       >
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="w-7 h-7 rounded-full bg-primary/15 text-primary border border-primary/25 flex items-center justify-center font-serif font-bold text-xs shrink-0 select-none">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <div className="flex h-8 w-8 shrink-0 select-none items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
             {initials}
           </div>
-          <div className="text-left min-w-0">
-            <span className="text-xs font-medium text-foreground block truncate">
-              {profile.username}
-            </span>
+          <div className="min-w-0 text-left">
+            <span className="block truncate text-sm font-medium text-foreground">{profile.username}</span>
             {profile.bio && (
-              <span className="text-[10px] text-muted-foreground block truncate">
-                {profile.bio}
-              </span>
+              <span className="block truncate text-xs text-muted-foreground">{profile.bio}</span>
             )}
           </div>
         </div>
-
-        <ChevronUp className={`w-3.5 h-3.5 text-muted-foreground transition-transform shrink-0 ${isOpen ? '' : 'rotate-180'}`} />
+        <ChevronsUpDown className="h-4 w-4 shrink-0 text-muted-foreground" />
       </button>
 
-      {/* Popover Menu */}
-      {isOpen && (
-        <div
-          className="absolute bottom-full left-0 mb-1.5 w-60 rounded-xl border border-border bg-popover text-popover-foreground shadow-xl z-50 py-1.5 text-xs animate-in fade-in-0 zoom-in-95 duration-100"
-          role="menu"
-        >
-          <div className="px-3 py-2 border-b border-border/50">
-            <div className="font-medium text-foreground text-xs truncate">{profile.username}</div>
-            <div className="text-[11px] text-muted-foreground truncate">Local Personal Workspace</div>
-          </div>
-
-          <div className="py-1">
-            <button
-              type="button"
-              onClick={() => {
-                setIsOpen(false);
-                onOpenProfileModal();
-              }}
-              className="w-full text-left px-3 py-2 flex items-center gap-2 text-foreground hover:bg-muted/50 transition cursor-pointer"
-              role="menuitem"
-            >
-              <User className="w-3.5 h-3.5 text-muted-foreground" />
-              <span>Profile & Personalization</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setIsOpen(false);
-                onOpenModelManager();
-              }}
-              className="w-full text-left px-3 py-2 flex items-center gap-2 text-foreground hover:bg-muted/50 transition cursor-pointer"
-              role="menuitem"
-            >
-              <Cpu className="w-3.5 h-3.5 text-primary" />
-              <span>Model Profiles</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setIsOpen(false);
-                onOpenSettings();
-              }}
-              className="w-full text-left px-3 py-2 flex items-center gap-2 text-foreground hover:bg-muted/50 transition cursor-pointer"
-              role="menuitem"
-            >
-              <Settings className="w-3.5 h-3.5 text-muted-foreground" />
-              <span>Settings</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="w-full text-left px-3 py-2 flex items-center justify-between text-foreground hover:bg-muted/50 transition cursor-pointer"
-              role="menuitem"
-            >
-              <div className="flex items-center gap-2">
-                {theme === 'dark' ? (
-                  <Moon className="w-3.5 h-3.5 text-primary" />
-                ) : (
-                  <Sun className="w-3.5 h-3.5 text-primary" />
-                )}
-                <span>Theme</span>
-              </div>
-              <span className="text-[11px] text-muted-foreground capitalize font-mono">
-                {theme}
-              </span>
-            </button>
-
-            {profile.hasPasscode && onLockWorkspace && (
-              <div className="border-t border-border/50 mt-1 pt-1">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsOpen(false);
-                    onLockWorkspace();
-                  }}
-                  className="w-full text-left px-3 py-2 flex items-center gap-2 text-destructive hover:bg-destructive/10 transition cursor-pointer"
-                  role="menuitem"
-                >
-                  <Lock className="w-3.5 h-3.5" />
-                  <span>Lock Workspace</span>
-                </button>
-              </div>
-            )}
-          </div>
+      <FloatingPanel
+        open={isOpen}
+        anchorRef={triggerRef}
+        onClose={() => setIsOpen(false)}
+        align="start"
+        width={248}
+        className="p-1.5"
+      >
+        <div className="px-3 pb-2 pt-1.5">
+          <div className="truncate text-sm font-medium text-foreground">{profile.username}</div>
+          <div className="truncate text-xs text-muted-foreground">Local personal workspace</div>
         </div>
-      )}
-    </div>
+
+        <div className="border-t border-border/10 pt-1.5">
+          <button type="button" role="menuitem" onClick={run(onOpenProfileModal)} className={menuItem}>
+            <User className="h-4 w-4 text-muted-foreground" />
+            <span>Profile &amp; personalization</span>
+          </button>
+
+          <button type="button" role="menuitem" onClick={run(onOpenModelManager)} className={menuItem}>
+            <Cpu className="h-4 w-4 text-muted-foreground" />
+            <span>Model profiles</span>
+          </button>
+
+          <button type="button" role="menuitem" onClick={run(onOpenSettings)} className={menuItem}>
+            <Settings className="h-4 w-4 text-muted-foreground" />
+            <span>Settings</span>
+          </button>
+
+          <button type="button" role="menuitem" onClick={cycleTheme} className={`${menuItem} justify-between`}>
+            <span className="flex items-center gap-2.5">
+              <ThemeIcon className="h-4 w-4 text-muted-foreground" />
+              <span>Theme</span>
+            </span>
+            <span className="text-xs capitalize text-muted-foreground">{theme}</span>
+          </button>
+        </div>
+
+        {profile.hasPasscode && onLockWorkspace && (
+          <div className="mt-1.5 border-t border-border/10 pt-1.5">
+            <button
+              type="button"
+              role="menuitem"
+              onClick={run(onLockWorkspace)}
+              className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm text-destructive transition-colors hover:bg-destructive/10 cursor-pointer"
+            >
+              <Lock className="h-4 w-4" />
+              <span>Lock workspace</span>
+            </button>
+          </div>
+        )}
+      </FloatingPanel>
+    </>
   );
 };

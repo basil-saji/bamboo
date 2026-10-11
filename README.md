@@ -56,10 +56,10 @@ bamboo is a lightweight, high-performance Progressive Web App. It runs entirely 
 
 ## Design System
 
-Bamboo uses a calm, Claude-inspired visual palette:
-- Muted sage and olive primary actions (`oklch(0.666 0.105 118.908)` in light, `oklch(0.676 0.057 132.448)` in dark).
-- Warm cream, muted brown, and charcoal surfaces.
-- Strictly no fluorescent or neon yellow accents.
+Bamboo uses a clean, ChatGPT-style layout with a high-contrast black / white palette:
+- Tokens live in `src/index.css` (`:root` and `.dark`): red primary, yellow accent, black/white surfaces, Inter for UI text, Georgia for serif, SF Mono / Courier New for code.
+- Floating glass navbar (blur + saturation) that content scrolls beneath.
+- Popovers (model switcher, chat menus, profile menu) render through `FloatingPanel`, which clamps to the viewport and flips above the trigger when there is no room below.
 - Light, Dark, and System theme persistence.
 
 ---

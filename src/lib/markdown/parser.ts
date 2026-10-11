@@ -28,21 +28,21 @@ renderer.link = function ({ href, title, text }) {
 // Custom table renderer to ensure horizontal scrolling
 renderer.table = function (token) {
   const headerHtml = token.header
-    .map((cell) => `<th class="border border-border px-3 py-2 text-left font-semibold text-foreground bg-muted/40">${cell.text}</th>`)
+    .map((cell) => `<th class="border border-border/20 px-3 py-2 text-left font-semibold text-foreground bg-muted/40">${cell.text}</th>`)
     .join('');
   const rowsHtml = token.rows
     .map(
       (row) =>
         `<tr class="border-b border-border/50 hover:bg-muted/20 transition-colors">${row
-          .map((cell) => `<td class="border border-border px-3 py-2 text-foreground/90">${cell.text}</td>`)
+          .map((cell) => `<td class="border border-border/20 px-3 py-2 text-foreground/90">${cell.text}</td>`)
           .join('')}</tr>`
     )
     .join('');
 
   return `
-    <div class="my-4 overflow-x-auto rounded-md border border-border">
+    <div class="my-4 overflow-x-auto rounded-md border border-border/20">
       <table class="w-full text-sm border-collapse text-left">
-        <thead><tr class="border-b border-border">${headerHtml}</tr></thead>
+        <thead><tr class="border-b border-border/20">${headerHtml}</tr></thead>
         <tbody>${rowsHtml}</tbody>
       </table>
     </div>
@@ -59,8 +59,8 @@ renderer.code = function ({ text, lang }: { text: string; lang?: string }) {
   const isLong = lineCount > 24;
 
   return `
-    <div class="code-block-container my-4 rounded-md border border-border bg-card overflow-hidden shadow-xs" data-raw-code="${encodedRaw}" data-ext="${ext}" data-lang="${escapeHtml(language)}">
-      <div class="code-block-header flex items-center justify-between px-3 py-1.5 border-b border-border bg-muted/50 text-xs text-muted-foreground select-none">
+    <div class="code-block-container my-4 rounded-md border border-border/20 bg-card overflow-hidden shadow-xs" data-raw-code="${encodedRaw}" data-ext="${ext}" data-lang="${escapeHtml(language)}">
+      <div class="code-block-header flex items-center justify-between px-3 py-1.5 border-b border-border/20 bg-muted/50 text-xs text-muted-foreground select-none">
         <span class="font-mono font-medium tracking-wide text-foreground/80 lowercase">${escapeHtml(language)}</span>
         <div class="flex items-center gap-1">
           <button type="button" class="btn-copy-code px-2 py-0.5 rounded hover:bg-accent hover:text-accent-foreground transition-colors font-sans text-xs flex items-center gap-1 cursor-pointer" title="Copy code" aria-label="Copy code">

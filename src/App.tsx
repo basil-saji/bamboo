@@ -93,7 +93,34 @@ export const App: React.FC = () => {
   const [isModelManagerOpen, setIsModelManagerOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isSidebarOpenMobile, setIsSidebarOpenMobile] = useState(false);
-  const [isSidebarCollapsedDesktop, setIsSidebarCollapsedDesktop] = useState(false);
+  // Start with the sidebar tucked away on tablets / small laptops so the chat gets the room
+  const [isSidebarCollapsedDesktop, setIsSidebarCollapsedDesktop] = useState<boolean>(
+    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 1023px)').matches
+  );
+
+  // Keep drawer state in sync with the breakpoint (Tailwind `md` = 768px)
+  const [isDesktop, setIsDesktop] = useState<boolean>(
+    () => typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches
+  );
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)');
+    const onChange = (e: MediaQueryListEvent) => {
+      setIsDesktop(e.matches);
+      if (e.matches) setIsSidebarOpenMobile(false);
+    };
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+
+  // Esc closes the mobile drawer
+  useEffect(() => {
+    if (!isSidebarOpenMobile) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsSidebarOpenMobile(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isSidebarOpenMobile]);
 
   // Messages
   const {
@@ -149,19 +176,13 @@ export const App: React.FC = () => {
   };
 
   const handleSendMessage = async (content: string, attachments?: Attachment[]) => {
-    if (!activeConversationId) {
-      const newConv = await createConversation('New conversation', activeModel?.id);
-      setTimeout(async () => {
-        try {
-          await sendMessage(content, attachments);
-        } catch {
-          // Handled
-        }
-      }, 50);
-      return;
-    }
-
     try {
+      if (!activeConversationId) {
+        // Pass the new id straight through — no timers, no stale closure
+        const newConv = await createConversation('New conversation', activeModel?.id);
+        await sendMessage(content, attachments, newConv.id);
+        return;
+      }
       await sendMessage(content, attachments);
     } catch {
       // Handled
@@ -210,9 +231,14 @@ export const App: React.FC = () => {
       />
 
       {/* Main Application Shell */}
-      <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground font-sans">
-        {/* Sidebar */}
-        <div className={`${isSidebarCollapsedDesktop ? 'md:hidden' : 'md:flex md:w-64'} shrink-0`}>
+      <div className="flex h-dvh w-full overflow-hidden bg-background font-sans text-foreground">
+        {/* Sidebar (drawer on mobile, collapsible column from `md` up) */}
+        <div
+          className={`shrink-0 overflow-hidden md:transition-[width] md:duration-200 md:ease-out ${
+            isSidebarCollapsedDesktop ? 'md:w-0' : 'md:w-[260px]'
+          }`}
+          inert={isDesktop && isSidebarCollapsedDesktop}
+        >
           <Sidebar
             conversations={filteredConversations}
             activeConversationId={activeConversationId}
@@ -239,7 +265,7 @@ export const App: React.FC = () => {
         </div>
 
         {/* Main Workspace */}
-        <main className="flex-1 flex flex-col h-full min-w-0 relative">
+        <main className="relative flex h-full min-w-0 flex-1 flex-col">
           <Header
             conversation={activeConversation}
             models={models}
@@ -247,12 +273,14 @@ export const App: React.FC = () => {
             onSelectModel={setActiveModelId}
             onOpenModelManager={() => setIsModelManagerOpen(true)}
             onToggleSidebar={() => {
-              if (window.innerWidth < 768) {
-                setIsSidebarOpenMobile(!isSidebarOpenMobile);
+              if (window.matchMedia('(min-width: 768px)').matches) {
+                setIsSidebarCollapsedDesktop((v) => !v);
               } else {
-                setIsSidebarCollapsedDesktop(!isSidebarCollapsedDesktop);
+                setIsSidebarOpenMobile((v) => !v);
               }
             }}
+            onNewConversation={handleNewConversation}
+            isSidebarCollapsed={isSidebarCollapsedDesktop}
             onClearContext={clearContextBoundary}
             onExportMarkdown={handleExportConversationMarkdown}
             onTogglePin={() => activeConversationId && togglePin(activeConversationId)}
@@ -282,7 +310,6 @@ export const App: React.FC = () => {
             generationState={generationState}
             models={models}
             activeModel={activeModel}
-            onSelectModel={setActiveModelId}
             onOpenModelManager={() => setIsModelManagerOpen(true)}
             enterToSend={settings.enterToSend}
           />

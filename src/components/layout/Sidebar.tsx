@@ -1,18 +1,19 @@
-import React, { useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import {
   Archive,
-  FolderArchive,
-  MessageSquare,
-  MessageSquarePlus,
+  ArchiveRestore,
+  Ellipsis,
+  Pencil,
   Pin,
   PinOff,
   Search,
+  SquarePen,
   Trash2,
   X,
-  Edit2,
 } from 'lucide-react';
 import type { Conversation, ThemeMode, UserProfile } from '../../types';
 import { BambooLogo } from '../ui/BambooLogo';
+import { FloatingPanel } from '../ui/FloatingPanel';
 import { ProfileMenu } from '../profile/ProfileMenu';
 
 interface SidebarProps {
@@ -38,6 +39,40 @@ interface SidebarProps {
   isOpenMobile: boolean;
   onCloseMobile: () => void;
 }
+
+/** Group chats by last activity, like ChatGPT's "Today / Yesterday / Previous 7 days". */
+function groupByDate(items: Conversation[]): { label: string; items: Conversation[] }[] {
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const DAY = 86_400_000;
+
+  const buckets: { label: string; min: number; items: Conversation[] }[] = [
+    { label: 'Today', min: startOfToday, items: [] },
+    { label: 'Yesterday', min: startOfToday - DAY, items: [] },
+    { label: 'Previous 7 days', min: startOfToday - 7 * DAY, items: [] },
+    { label: 'Previous 30 days', min: startOfToday - 30 * DAY, items: [] },
+    { label: 'Older', min: -Infinity, items: [] },
+  ];
+
+  [...items]
+    .sort((a, b) => b.updatedAt - a.updatedAt)
+    .forEach((c) => {
+      const bucket = buckets.find((b) => c.updatedAt >= b.min) ?? buckets[buckets.length - 1];
+      bucket.items.push(c);
+    });
+
+  return buckets.filter((b) => b.items.length > 0).map(({ label, items }) => ({ label, items }));
+}
+
+const rowButton =
+  'flex h-10 w-full items-center gap-2.5 rounded-xl px-3 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent cursor-pointer';
+
+const SectionLabel: React.FC<{ children: React.ReactNode; icon?: React.ReactNode }> = ({ children, icon }) => (
+  <div className="flex items-center gap-1.5 px-3 pb-1 pt-4 text-xs font-medium text-muted-foreground">
+    {icon}
+    <span>{children}</span>
+  </div>
+);
 
 export const Sidebar: React.FC<SidebarProps> = ({
   conversations,
@@ -65,170 +100,151 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [editingConvId, setEditingConvId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
 
-  const handleStartRename = (c: Conversation) => {
+  const pinned = useMemo(
+    () => (filterArchived ? [] : conversations.filter((c) => c.isPinned)),
+    [conversations, filterArchived]
+  );
+  const groups = useMemo(
+    () => groupByDate(filterArchived ? conversations : conversations.filter((c) => !c.isPinned)),
+    [conversations, filterArchived]
+  );
+
+  const startRename = (c: Conversation) => {
     setEditingConvId(c.id);
     setEditTitle(c.title);
   };
 
-  const handleSaveRename = (id: string) => {
-    if (editTitle.trim()) {
-      onUpdateTitle(id, editTitle.trim());
-    }
+  const saveRename = (id: string) => {
+    if (editTitle.trim()) onUpdateTitle(id, editTitle.trim());
     setEditingConvId(null);
   };
 
-  const pinnedConversations = conversations.filter((c) => c.isPinned);
-  const unpinnedConversations = conversations.filter((c) => !c.isPinned);
+  const renderItem = (c: Conversation) => (
+    <ConversationItem
+      key={c.id}
+      conversation={c}
+      isActive={activeConversationId === c.id}
+      isEditing={editingConvId === c.id}
+      editTitle={editTitle}
+      setEditTitle={setEditTitle}
+      onSelect={() => {
+        onSelectConversation(c.id);
+        onCloseMobile();
+      }}
+      onStartRename={() => startRename(c)}
+      onSaveRename={() => saveRename(c.id)}
+      onCancelRename={() => setEditingConvId(null)}
+      onTogglePin={() => onTogglePin(c.id)}
+      onToggleArchive={() => onToggleArchive(c.id)}
+      onDelete={() => onDeleteConversation(c.id)}
+    />
+  );
+
+  const isEmpty = conversations.length === 0;
 
   return (
     <>
-      {/* Mobile Backdrop */}
+      {/* Mobile backdrop */}
       {isOpenMobile && (
         <div
-          className="fixed inset-0 z-40 bg-foreground/20 backdrop-blur-xs md:hidden"
+          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px] md:hidden"
           onClick={onCloseMobile}
           aria-hidden="true"
         />
       )}
 
-      {/* Sidebar Frame */}
       <aside
-        className={`fixed md:static inset-y-0 left-0 z-40 w-64 flex flex-col border-r border-sidebar-border/70 bg-sidebar text-sidebar-foreground transition-transform duration-200 ease-in-out md:translate-x-0 ${
-          isOpenMobile ? 'translate-x-0' : '-translate-x-full'
+        className={`fixed inset-y-0 left-0 z-50 flex w-[min(85vw,18rem)] flex-col border-r border-sidebar-border/10 bg-sidebar text-sidebar-foreground transition-transform duration-200 ease-out md:static md:z-auto md:w-[260px] md:translate-x-0 ${
+          isOpenMobile ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
         }`}
+        aria-label="Chats"
       >
-        {/* Brand & New Chat */}
-        <div className="p-3 border-b border-sidebar-border/40">
-          <div className="flex items-center justify-between mb-3 px-1">
-            <BambooLogo size={22} showText={true} />
-            <button
-              type="button"
-              onClick={onCloseMobile}
-              className="p-1 rounded md:hidden text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 cursor-pointer"
-              aria-label="Close menu"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
+        {/* Brand */}
+        <div className="flex items-center justify-between px-4 pb-1 pt-[max(0.75rem,env(safe-area-inset-top,0px))]">
+          <BambooLogo size={24} showText />
+          <button
+            type="button"
+            onClick={onCloseMobile}
+            className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground md:hidden cursor-pointer"
+            aria-label="Close menu"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
 
+        {/* Primary actions */}
+        <div className="space-y-0.5 px-2 pb-1 pt-2">
           <button
             type="button"
             onClick={() => {
               onNewConversation();
               onCloseMobile();
             }}
-            className="w-full flex items-center justify-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition shadow-xs cursor-pointer font-sans"
+            className={`${rowButton} font-medium`}
           >
-            <MessageSquarePlus className="w-3.5 h-3.5" />
-            <span>New conversation</span>
+            <SquarePen className="h-[18px] w-[18px]" />
+            <span>New chat</span>
+          </button>
+
+          <label className="flex h-10 w-full items-center gap-2.5 rounded-xl px-3 text-sm transition-colors focus-within:bg-sidebar-accent hover:bg-sidebar-accent">
+            <Search className="h-[18px] w-[18px] shrink-0 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search chats"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Search chats"
+              className="min-w-0 flex-1 bg-transparent text-base text-sidebar-foreground placeholder:text-sidebar-foreground focus:outline-none md:text-sm"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="rounded-full p-0.5 text-muted-foreground hover:text-foreground cursor-pointer"
+                aria-label="Clear search"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </label>
+
+          <button type="button" onClick={() => setFilterArchived(!filterArchived)} className={rowButton}>
+            {filterArchived ? (
+              <ArchiveRestore className="h-[18px] w-[18px]" />
+            ) : (
+              <Archive className="h-[18px] w-[18px]" />
+            )}
+            <span>{filterArchived ? 'Back to chats' : 'Archived'}</span>
           </button>
         </div>
 
-        {/* Search */}
-        <div className="px-3 py-2 border-b border-sidebar-border/30 space-y-1">
-          <div className="relative">
-            <Search className="w-3.5 h-3.5 absolute left-2.5 top-2 text-muted-foreground/70" />
-            <input
-              type="text"
-              placeholder="Search chats..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-2.5 py-1 text-xs rounded-md bg-sidebar-accent/40 border border-sidebar-border/60 text-sidebar-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-ring font-sans"
-            />
-          </div>
-
-          <div className="flex items-center justify-between text-[11px] px-0.5 pt-0.5">
-            <button
-              type="button"
-              onClick={() => setFilterArchived(!filterArchived)}
-              className="text-muted-foreground hover:text-sidebar-foreground transition flex items-center gap-1 cursor-pointer font-sans"
-            >
-              {filterArchived ? <FolderArchive className="w-3 h-3" /> : <Archive className="w-3 h-3" />}
-              <span>{filterArchived ? 'Active chats' : 'Archived'}</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Scrollable Conversation List */}
-        <div className="flex-1 overflow-y-auto px-2 py-2 space-y-2.5">
-          {conversations.length === 0 ? (
-            <div className="text-center py-8 px-2 text-xs text-muted-foreground font-sans">
-              {searchQuery ? (
-                <span>No matching chats.</span>
-              ) : filterArchived ? (
-                <span>No archived chats.</span>
-              ) : (
-                <span>No chats yet.</span>
-              )}
-            </div>
+        {/* Conversation list */}
+        <nav className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 pb-2">
+          {isEmpty ? (
+            <p className="px-3 py-10 text-center text-sm text-muted-foreground">
+              {searchQuery ? 'No matching chats' : filterArchived ? 'No archived chats' : 'No chats yet'}
+            </p>
           ) : (
             <>
-              {/* Pinned section */}
-              {pinnedConversations.length > 0 && !filterArchived && (
-                <div className="space-y-0.5">
-                  <div className="px-2 py-0.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-1 font-sans">
-                    <Pin className="w-2.5 h-2.5" />
-                    <span>Pinned</span>
-                  </div>
-                  {pinnedConversations.map((c) => (
-                    <ConversationItem
-                      key={c.id}
-                      conversation={c}
-                      isActive={activeConversationId === c.id}
-                      isEditing={editingConvId === c.id}
-                      editTitle={editTitle}
-                      setEditTitle={setEditTitle}
-                      onSelect={() => {
-                        onSelectConversation(c.id);
-                        onCloseMobile();
-                      }}
-                      onStartRename={() => handleStartRename(c)}
-                      onSaveRename={() => handleSaveRename(c.id)}
-                      onCancelRename={() => setEditingConvId(null)}
-                      onTogglePin={() => onTogglePin(c.id)}
-                      onToggleArchive={() => onToggleArchive(c.id)}
-                      onDelete={() => onDeleteConversation(c.id)}
-                    />
-                  ))}
-                </div>
+              {pinned.length > 0 && (
+                <section>
+                  <SectionLabel icon={<Pin className="h-3 w-3" />}>Pinned</SectionLabel>
+                  <div className="space-y-0.5">{pinned.map(renderItem)}</div>
+                </section>
               )}
 
-              {/* Recent section */}
-              {unpinnedConversations.length > 0 && (
-                <div className="space-y-0.5">
-                  {pinnedConversations.length > 0 && !filterArchived && (
-                    <div className="px-2 py-0.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider font-sans">
-                      Recent
-                    </div>
-                  )}
-                  {unpinnedConversations.map((c) => (
-                    <ConversationItem
-                      key={c.id}
-                      conversation={c}
-                      isActive={activeConversationId === c.id}
-                      isEditing={editingConvId === c.id}
-                      editTitle={editTitle}
-                      setEditTitle={setEditTitle}
-                      onSelect={() => {
-                        onSelectConversation(c.id);
-                        onCloseMobile();
-                      }}
-                      onStartRename={() => handleStartRename(c)}
-                      onSaveRename={() => handleSaveRename(c.id)}
-                      onCancelRename={() => setEditingConvId(null)}
-                      onTogglePin={() => onTogglePin(c.id)}
-                      onToggleArchive={() => onToggleArchive(c.id)}
-                      onDelete={() => onDeleteConversation(c.id)}
-                    />
-                  ))}
-                </div>
-              )}
+              {groups.map((g) => (
+                <section key={g.label}>
+                  <SectionLabel>{filterArchived ? 'Archived' : g.label}</SectionLabel>
+                  <div className="space-y-0.5">{g.items.map(renderItem)}</div>
+                </section>
+              ))}
             </>
           )}
-        </div>
+        </nav>
 
-        {/* Profile Footer */}
-        <div className="p-2 border-t border-sidebar-border/40">
+        {/* Profile footer */}
+        <div className="border-t border-sidebar-border/10 p-2 pb-[max(0.5rem,env(safe-area-inset-bottom,0px))]">
           <ProfileMenu
             profile={profile}
             theme={theme}
@@ -259,6 +275,9 @@ interface ConversationItemProps {
   onDelete: () => void;
 }
 
+const menuItem =
+  'flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-muted cursor-pointer';
+
 const ConversationItem: React.FC<ConversationItemProps> = ({
   conversation,
   isActive,
@@ -273,92 +292,145 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
   onToggleArchive,
   onDelete,
 }) => {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+
+  const closeMenu = () => {
+    setMenuOpen(false);
+    setConfirmDelete(false);
+  };
+
   if (isEditing) {
     return (
-      <div className="px-2 py-1.5 rounded-md bg-sidebar-accent/50 border border-sidebar-border">
+      <div className="flex h-10 items-center rounded-xl bg-sidebar-accent px-2">
         <input
           type="text"
           value={editTitle}
           onChange={(e) => setEditTitle(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter') onSaveRename();
-            if (e.key === 'Escape') onCancelRename();
+            if (e.key === 'Escape') {
+              e.currentTarget.dataset.cancelled = 'true';
+              onCancelRename();
+            }
+          }}
+          onBlur={(e) => {
+            if (e.currentTarget.dataset.cancelled !== 'true') onSaveRename();
           }}
           autoFocus
-          className="w-full px-1.5 py-0.5 text-xs rounded bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-ring font-sans"
+          onFocus={(e) => e.currentTarget.select()}
+          aria-label="Rename chat"
+          className="w-full rounded-md border border-border/20 bg-card px-2 py-1 text-base text-foreground focus:border-ring focus:outline-none md:text-sm"
         />
-        <div className="flex items-center justify-end gap-1 mt-1 text-[11px] font-sans">
-          <button
-            type="button"
-            onClick={onCancelRename}
-            className="px-1.5 py-0.5 text-muted-foreground hover:text-foreground cursor-pointer"
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={onSaveRename}
-            className="px-2 py-0.5 rounded bg-primary text-primary-foreground font-medium cursor-pointer"
-          >
-            Save
-          </button>
-        </div>
       </div>
     );
   }
 
   return (
     <div
-      className={`group relative flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition cursor-pointer font-sans ${
-        isActive
-          ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
-          : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/40 hover:text-sidebar-foreground'
+      className={`group relative flex h-10 items-center rounded-xl text-sm transition-colors ${
+        isActive || menuOpen
+          ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+          : 'text-sidebar-foreground hover:bg-sidebar-accent/70'
       }`}
-      onClick={onSelect}
     >
-      <div className="flex items-center gap-2 truncate pr-1">
-        <MessageSquare className="w-3.5 h-3.5 shrink-0 text-muted-foreground/60" />
+      <button
+        type="button"
+        onClick={onSelect}
+        className="flex h-full min-w-0 flex-1 items-center rounded-xl pl-3 pr-1 text-left cursor-pointer"
+        title={conversation.title}
+        aria-current={isActive ? 'page' : undefined}
+      >
         <span className="truncate">{conversation.title}</span>
-      </div>
+      </button>
 
-      {/* Item actions on hover */}
-      <div
-        className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition shrink-0"
-        onClick={(e) => e.stopPropagation()}
+      <button
+        ref={menuButtonRef}
+        type="button"
+        onClick={() => setMenuOpen((v) => !v)}
+        className={`mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:none)]:opacity-100 cursor-pointer ${
+          menuOpen || isActive ? 'opacity-100' : 'opacity-0'
+        }`}
+        aria-label="Chat options"
+        aria-haspopup="menu"
+        aria-expanded={menuOpen}
+      >
+        <Ellipsis className="h-[18px] w-[18px]" />
+      </button>
+
+      <FloatingPanel
+        open={menuOpen}
+        anchorRef={menuButtonRef}
+        onClose={closeMenu}
+        align="start"
+        width={200}
+        className="p-1.5"
       >
         <button
           type="button"
-          onClick={onTogglePin}
-          className="p-1 rounded hover:bg-sidebar-accent text-muted-foreground hover:text-foreground transition cursor-pointer"
-          title={conversation.isPinned ? 'Unpin' : 'Pin'}
+          role="menuitem"
+          onClick={() => {
+            closeMenu();
+            onStartRename();
+          }}
+          className={menuItem}
         >
-          {conversation.isPinned ? <PinOff className="w-3 h-3" /> : <Pin className="w-3 h-3" />}
+          <Pencil className="h-4 w-4 text-muted-foreground" />
+          <span>Rename</span>
         </button>
         <button
           type="button"
-          onClick={onStartRename}
-          className="p-1 rounded hover:bg-sidebar-accent text-muted-foreground hover:text-foreground transition cursor-pointer"
-          title="Rename"
+          role="menuitem"
+          onClick={() => {
+            closeMenu();
+            onTogglePin();
+          }}
+          className={menuItem}
         >
-          <Edit2 className="w-3 h-3" />
+          {conversation.isPinned ? (
+            <PinOff className="h-4 w-4 text-muted-foreground" />
+          ) : (
+            <Pin className="h-4 w-4 text-muted-foreground" />
+          )}
+          <span>{conversation.isPinned ? 'Unpin' : 'Pin'}</span>
         </button>
         <button
           type="button"
-          onClick={onToggleArchive}
-          className="p-1 rounded hover:bg-sidebar-accent text-muted-foreground hover:text-foreground transition cursor-pointer"
-          title={conversation.isArchived ? 'Restore' : 'Archive'}
+          role="menuitem"
+          onClick={() => {
+            closeMenu();
+            onToggleArchive();
+          }}
+          className={menuItem}
         >
-          <Archive className="w-3 h-3" />
+          {conversation.isArchived ? (
+            <ArchiveRestore className="h-4 w-4 text-muted-foreground" />
+          ) : (
+            <Archive className="h-4 w-4 text-muted-foreground" />
+          )}
+          <span>{conversation.isArchived ? 'Restore' : 'Archive'}</span>
         </button>
-        <button
-          type="button"
-          onClick={onDelete}
-          className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition cursor-pointer"
-          title="Delete"
-        >
-          <Trash2 className="w-3 h-3" />
-        </button>
-      </div>
+
+        <div className="mt-1.5 border-t border-border/10 pt-1.5">
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              if (!confirmDelete) {
+                setConfirmDelete(true);
+                return;
+              }
+              closeMenu();
+              onDelete();
+            }}
+            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm text-destructive transition-colors hover:bg-destructive/10 cursor-pointer"
+          >
+            <Trash2 className="h-4 w-4" />
+            <span>{confirmDelete ? 'Click again to delete' : 'Delete'}</span>
+          </button>
+        </div>
+      </FloatingPanel>
     </div>
   );
 };

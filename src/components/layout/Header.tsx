@@ -1,16 +1,18 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   Download,
-  Menu,
-  MoreVertical,
+  Ellipsis,
+  PanelLeft,
   Pin,
   PinOff,
   Split,
+  SquarePen,
   Trash2,
   WifiOff,
 } from 'lucide-react';
 import type { Conversation, ModelProfile } from '../../types';
 import { ModelSelector } from '../models/ModelSelector';
+import { FloatingPanel } from '../ui/FloatingPanel';
 import { usePWAInstall } from '../../hooks/usePWAInstall';
 
 interface HeaderProps {
@@ -20,12 +22,21 @@ interface HeaderProps {
   onSelectModel: (id: string) => void;
   onOpenModelManager: () => void;
   onToggleSidebar: () => void;
+  onNewConversation: () => void;
+  /** Desktop sidebar is hidden → surface "new chat" in the header. */
+  isSidebarCollapsed: boolean;
   onClearContext: () => void;
   onExportMarkdown: () => void;
   onTogglePin?: () => void;
   onDeleteConversation?: () => void;
   isOnline?: boolean;
 }
+
+const iconButton =
+  'inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground data-[open=true]:bg-foreground/10 data-[open=true]:text-foreground cursor-pointer';
+
+const menuItem =
+  'flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-muted cursor-pointer';
 
 export const Header: React.FC<HeaderProps> = ({
   conversation,
@@ -34,6 +45,8 @@ export const Header: React.FC<HeaderProps> = ({
   onSelectModel,
   onOpenModelManager,
   onToggleSidebar,
+  onNewConversation,
+  isSidebarCollapsed,
   onClearContext,
   onExportMarkdown,
   onTogglePin,
@@ -41,65 +54,68 @@ export const Header: React.FC<HeaderProps> = ({
   isOnline = true,
 }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
   const { isInstallable, install } = usePWAInstall();
 
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setIsMenuOpen(false);
-      }
-    };
-    if (isMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isMenuOpen]);
+  const run = (fn?: () => void) => () => {
+    setIsMenuOpen(false);
+    fn?.();
+  };
 
   return (
-    <header className="h-14 border-b border-border bg-card/80 backdrop-blur-xs px-3 md:px-4 flex items-center justify-between gap-3 shrink-0 z-20">
-      {/* Left side: Toggle & Conversation Title */}
-      <div className="flex items-center gap-2 min-w-0">
+    // Floats over the chat so the content blurs underneath it (glass navbar).
+    <header
+      className="absolute inset-x-0 top-0 z-30 flex h-[var(--header-h)] items-center justify-between gap-2 border-b border-border/10 bg-background/60 px-2 pt-[env(safe-area-inset-top,0px)] backdrop-blur-xl backdrop-saturate-150 supports-[not(backdrop-filter:blur(1px))]:bg-background/95 sm:px-3"
+    >
+      {/* Left: sidebar toggle, new chat, title */}
+      <div className="flex min-w-0 items-center gap-1">
         <button
           type="button"
           onClick={onToggleSidebar}
-          className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors cursor-pointer"
+          className={iconButton}
           title="Toggle sidebar"
           aria-label="Toggle sidebar"
         >
-          <Menu className="w-4 h-4" />
+          <PanelLeft className="h-5 w-5" />
         </button>
 
-        <div className="min-w-0 flex items-center gap-2">
-          <h1 className="text-xs md:text-sm font-medium text-foreground truncate max-w-[160px] sm:max-w-[280px] md:max-w-[360px]">
-            {conversation ? conversation.title : 'New conversation'}
+        <button
+          type="button"
+          onClick={onNewConversation}
+          className={`${iconButton} ${isSidebarCollapsed ? '' : 'md:hidden'}`}
+          title="New chat"
+          aria-label="New chat"
+        >
+          <SquarePen className="h-5 w-5" />
+        </button>
+
+        <div className="ml-1 flex min-w-0 items-center gap-1.5">
+          <h1 className="min-w-0 truncate text-sm font-medium text-foreground">
+            {conversation ? conversation.title : 'New chat'}
           </h1>
           {conversation?.isPinned && (
-            <Pin className="w-3 h-3 text-primary shrink-0" aria-label="Pinned" />
+            <Pin className="h-3.5 w-3.5 shrink-0 text-primary" aria-label="Pinned" />
           )}
         </div>
       </div>
 
-      {/* Right side: Offline alert, Model selector, PWA install & Conversation actions */}
-      <div className="flex items-center gap-2 shrink-0">
+      {/* Right: status, install, model switcher, actions */}
+      <div className="flex shrink-0 items-center gap-0.5">
         {!isOnline && (
-          <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-destructive/10 text-destructive border border-destructive/20">
-            <WifiOff className="w-3 h-3" />
+          <div className="mr-1 inline-flex items-center gap-1 rounded-full border border-destructive/25 bg-destructive/10 px-2 py-1 text-xs font-medium text-destructive">
+            <WifiOff className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Offline</span>
           </div>
         )}
 
-        {/* In-App PWA Install action if installable */}
         {isInstallable && (
           <button
             type="button"
             onClick={install}
-            className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md border border-border bg-card hover:bg-muted/50 text-foreground transition-colors cursor-pointer"
+            className="mr-1 hidden h-9 items-center gap-1.5 rounded-full border border-border/20 px-3 text-sm font-medium text-foreground transition-colors hover:bg-foreground/10 sm:inline-flex cursor-pointer"
           >
-            <Download className="w-3.5 h-3.5 text-primary" />
-            <span>Install PWA</span>
+            <Download className="h-4 w-4 text-primary" />
+            <span>Install</span>
           </button>
         )}
 
@@ -110,87 +126,71 @@ export const Header: React.FC<HeaderProps> = ({
           onOpenModelManager={onOpenModelManager}
         />
 
-        {/* Conversation overflow menu */}
         {conversation && (
-          <div className="relative" ref={menuRef}>
+          <>
             <button
+              ref={menuButtonRef}
               type="button"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors cursor-pointer"
+              onClick={() => setIsMenuOpen((v) => !v)}
+              className={iconButton}
+              data-open={isMenuOpen}
               title="Conversation actions"
               aria-label="Conversation actions"
+              aria-haspopup="menu"
+              aria-expanded={isMenuOpen}
             >
-              <MoreVertical className="w-4 h-4" />
+              <Ellipsis className="h-5 w-5" />
             </button>
 
-            {isMenuOpen && (
-              <div className="absolute right-0 mt-1 w-48 rounded-md border border-border bg-popover text-popover-foreground shadow-lg z-30 py-1 text-xs animate-in fade-in-0 zoom-in-95 duration-100">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    onClearContext();
-                  }}
-                  className="w-full text-left px-3 py-1.5 flex items-center gap-2 hover:bg-muted/50 transition-colors text-foreground cursor-pointer"
-                  title="Clear model context boundary"
-                >
-                  <Split className="w-3.5 h-3.5 text-primary" />
-                  <span>Clear context boundary</span>
-                </button>
+            <FloatingPanel
+              open={isMenuOpen}
+              anchorRef={menuButtonRef}
+              onClose={() => setIsMenuOpen(false)}
+              align="end"
+              width={232}
+              className="p-1.5"
+            >
+              <button type="button" role="menuitem" onClick={run(onClearContext)} className={menuItem}>
+                <Split className="h-4 w-4 text-muted-foreground" />
+                <span>Clear context boundary</span>
+              </button>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    onExportMarkdown();
-                  }}
-                  className="w-full text-left px-3 py-1.5 flex items-center gap-2 hover:bg-muted/50 transition-colors text-foreground cursor-pointer"
-                >
-                  <Download className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span>Export Markdown</span>
-                </button>
+              <button type="button" role="menuitem" onClick={run(onExportMarkdown)} className={menuItem}>
+                <Download className="h-4 w-4 text-muted-foreground" />
+                <span>Export as Markdown</span>
+              </button>
 
-                {onTogglePin && (
+              {onTogglePin && (
+                <button type="button" role="menuitem" onClick={run(onTogglePin)} className={menuItem}>
+                  {conversation.isPinned ? (
+                    <>
+                      <PinOff className="h-4 w-4 text-muted-foreground" />
+                      <span>Unpin chat</span>
+                    </>
+                  ) : (
+                    <>
+                      <Pin className="h-4 w-4 text-muted-foreground" />
+                      <span>Pin chat</span>
+                    </>
+                  )}
+                </button>
+              )}
+
+              {onDeleteConversation && (
+                <div className="mt-1.5 border-t border-border/10 pt-1.5">
                   <button
                     type="button"
-                    onClick={() => {
-                      setIsMenuOpen(false);
-                      onTogglePin();
-                    }}
-                    className="w-full text-left px-3 py-1.5 flex items-center gap-2 hover:bg-muted/50 transition-colors text-foreground cursor-pointer"
+                    role="menuitem"
+                    onClick={run(onDeleteConversation)}
+                    className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm text-destructive transition-colors hover:bg-destructive/10 cursor-pointer"
                   >
-                    {conversation.isPinned ? (
-                      <>
-                        <PinOff className="w-3.5 h-3.5 text-muted-foreground" />
-                        <span>Unpin conversation</span>
-                      </>
-                    ) : (
-                      <>
-                        <Pin className="w-3.5 h-3.5 text-muted-foreground" />
-                        <span>Pin conversation</span>
-                      </>
-                    )}
+                    <Trash2 className="h-4 w-4" />
+                    <span>Delete chat</span>
                   </button>
-                )}
-
-                {onDeleteConversation && (
-                  <div className="border-t border-border mt-1 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsMenuOpen(false);
-                        onDeleteConversation();
-                      }}
-                      className="w-full text-left px-3 py-1.5 flex items-center gap-2 hover:bg-destructive/10 text-destructive transition-colors cursor-pointer"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      <span>Delete conversation</span>
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+                </div>
+              )}
+            </FloatingPanel>
+          </>
         )}
       </div>
     </header>

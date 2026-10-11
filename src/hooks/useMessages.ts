@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Attachment, GenerationState, Message, ModelProfile } from '../types';
+import { deriveTitle } from '../lib/title';
 import {
   buildChatMessages,
   streamChatCompletion,
@@ -16,7 +17,7 @@ import {
 interface UseMessagesProps {
   conversationId: string | null;
   activeModel: ModelProfile | null;
-  onAutoTitle?: (conversationId: string, title: string) => void;
+  onAutoTitle?: (conversationId: string, title: string) => void | Promise<void>;
   maxContextMessages?: number;
 }
 
@@ -34,6 +35,10 @@ export function useMessages({
   const activeMessageIdRef = useRef<string | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const pendingChunkRef = useRef<string | null>(null);
+  // Conversation the in-flight generation belongs to, and a token that lets us
+  // discard stale DB loads that resolve after a newer local update.
+  const generatingConvIdRef = useRef<string | null>(null);
+  const loadSeqRef = useRef(0);
 
   // Load messages whenever conversationId changes
   const loadMessages = useCallback(async () => {
@@ -41,22 +46,26 @@ export function useMessages({
       setMessages([]);
       return;
     }
+    const seq = ++loadSeqRef.current;
     setIsLoading(true);
     try {
       const list = await getMessagesByConversation(conversationId);
-      setMessages(list);
+      // A send() that started meanwhile owns the message list now
+      if (seq === loadSeqRef.current) setMessages(list);
     } finally {
       setIsLoading(false);
     }
   }, [conversationId]);
 
   useEffect(() => {
-    // If generation is active when switching conversations, stop it cleanly
-    if (abortControllerRef.current) {
+    // If a generation for a *different* conversation is active, stop it cleanly.
+    // (A brand-new chat sends its first message while becoming active — leave that one alone.)
+    const generationIsForThisChat = generatingConvIdRef.current === conversationId;
+    if (abortControllerRef.current && !generationIsForThisChat) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
-    setGenerationState('ready');
+    if (!generationIsForThisChat) setGenerationState('ready');
     loadMessages();
   }, [conversationId, loadMessages]);
 
@@ -69,41 +78,29 @@ export function useMessages({
     };
   }, []);
 
-  // Generate a clean title from the first message
-  const deriveTitle = (text: string): string => {
-    const clean = text.replace(/^[#\s*-_]+/, '').trim();
-    if (!clean) return 'New conversation';
-    const firstLine = clean.split('\n')[0].trim();
-    if (firstLine.length <= 42) return firstLine;
-    return firstLine.slice(0, 42).trim() + '...';
-  };
-
   /**
    * Send a new message
    */
   const sendMessage = useCallback(
-    async (content: string, attachments?: Attachment[]) => {
-      if (!conversationId) return;
+    async (content: string, attachments?: Attachment[], targetConversationId?: string) => {
+      // A just-created chat passes its id explicitly (React state hasn't caught up yet)
+      const convId = targetConversationId ?? conversationId;
+      if (!convId) return;
       if (!content.trim() && (!attachments || attachments.length === 0)) return;
       if (!activeModel) {
         throw new Error('No model configured. Please add and select a model profile first.');
       }
 
       // Check if this is the first message in the conversation to auto-title it
-      const currentMessages = await getMessagesByConversation(conversationId);
+      const currentMessages = await getMessagesByConversation(convId);
       if (currentMessages.length === 0 && onAutoTitle) {
-        const title = deriveTitle(content);
-        onAutoTitle(conversationId, title);
-        const conv = await getConversationById(conversationId);
-        if (conv) {
-          await saveConversation({ ...conv, title, updatedAt: Date.now() });
-        }
+        await onAutoTitle(convId, deriveTitle(content || attachments?.[0]?.name || ''));
       }
 
       const now = Date.now();
       const userMessage: Message = {
         id: crypto.randomUUID(),
-        conversationId,
+        conversationId: convId,
         role: 'user',
         content,
         attachments,
@@ -117,7 +114,7 @@ export function useMessages({
       const assistantMessageId = crypto.randomUUID();
       const assistantMessage: Message = {
         id: assistantMessageId,
-        conversationId,
+        conversationId: convId,
         role: 'assistant',
         content: '',
         modelProfileId: activeModel.id,
@@ -128,7 +125,9 @@ export function useMessages({
 
       await saveMessage(assistantMessage);
 
-      // Update local state
+      // Update local state (and invalidate any older in-flight DB load)
+      loadSeqRef.current++;
+      generatingConvIdRef.current = convId;
       const updatedList = [...currentMessages, userMessage, assistantMessage];
       setMessages(updatedList);
       setGenerationState('connecting');
@@ -193,9 +192,10 @@ export function useMessages({
               setGenerationState('complete');
               abortControllerRef.current = null;
               activeMessageIdRef.current = null;
+              generatingConvIdRef.current = null;
 
               // Update conversation timestamp
-              const c = await getConversationById(conversationId);
+              const c = await getConversationById(convId);
               if (c) {
                 await saveConversation({ ...c, updatedAt: Date.now() });
               }
@@ -220,6 +220,7 @@ export function useMessages({
               setGenerationState('error');
               abortControllerRef.current = null;
               activeMessageIdRef.current = null;
+              generatingConvIdRef.current = null;
             },
           },
           controller.signal,
@@ -267,6 +268,7 @@ export function useMessages({
 
       setGenerationState('interrupted');
       activeMessageIdRef.current = null;
+              generatingConvIdRef.current = null;
     }
   }, []);
 
@@ -342,6 +344,7 @@ export function useMessages({
               setGenerationState('complete');
               abortControllerRef.current = null;
               activeMessageIdRef.current = null;
+              generatingConvIdRef.current = null;
             },
             onError: async (err) => {
               const errorMsg: Message = {
@@ -357,6 +360,7 @@ export function useMessages({
               setGenerationState('error');
               abortControllerRef.current = null;
               activeMessageIdRef.current = null;
+              generatingConvIdRef.current = null;
             },
           },
           controller.signal,
@@ -451,6 +455,7 @@ export function useMessages({
               setGenerationState('complete');
               abortControllerRef.current = null;
               activeMessageIdRef.current = null;
+              generatingConvIdRef.current = null;
             },
             onError: async (err) => {
               const errorMsg: Message = {
@@ -466,6 +471,7 @@ export function useMessages({
               setGenerationState('error');
               abortControllerRef.current = null;
               activeMessageIdRef.current = null;
+              generatingConvIdRef.current = null;
             },
           },
           controller.signal,

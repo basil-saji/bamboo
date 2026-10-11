@@ -1,3 +1,4 @@
+import { deriveTitle } from '../src/lib/title';
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
   clearAllData,
@@ -394,5 +395,27 @@ describe('BAMBOO Production Chat Verification Suite', () => {
     expect(updated.username).toBe('Basil');
     expect(updated.avatarInitials).toBe('BS');
     expect(updated.bio).toBe('Software Architect');
+  });
+});
+
+
+describe('deriveTitle', () => {
+  it('keeps the first letter of capitalised prompts ("Hello" must not become "ello")', () => {
+    expect(deriveTitle('Hello')).toBe('Hello');
+    expect(deriveTitle('Write a poem')).toBe('Write a poem');
+    expect(deriveTitle('ZORA quantisation help')).toBe('ZORA quantisation help');
+  });
+
+  it('strips leading markdown markers only', () => {
+    expect(deriveTitle('## Heading')).toBe('Heading');
+    expect(deriveTitle('- list item')).toBe('list item');
+    expect(deriveTitle('> quoted')).toBe('quoted');
+  });
+
+  it('falls back for empty input and truncates long titles on a word boundary', () => {
+    expect(deriveTitle('   ')).toBe('New conversation');
+    const long = deriveTitle('Explain how optimistic concurrency control works with practical examples please');
+    expect(long.endsWith('…')).toBe(true);
+    expect(long.length).toBeLessThanOrEqual(43);
   });
 });

@@ -137,7 +137,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
     return (
       <div className="w-full my-6 flex items-center justify-center select-none" role="separator">
         <div className="h-px bg-border flex-1 max-w-[120px]" />
-        <span className="px-3 text-[11px] font-mono text-muted-foreground uppercase tracking-wider text-center">
+        <span className="px-3 text-[11px] text-muted-foreground uppercase tracking-wider text-center">
           Context Boundary · Earlier messages excluded from model prompt
         </span>
         <div className="h-px bg-border flex-1 max-w-[120px]" />
@@ -182,7 +182,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
                   {message.attachments.map((att) => (
                     <div
                       key={att.id}
-                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono bg-muted/60 text-muted-foreground border border-border/40"
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] bg-muted/60 text-muted-foreground border border-border/15"
                     >
                       <Paperclip className="w-3 h-3" />
                       <span className="truncate max-w-[160px]">{att.name}</span>
@@ -192,12 +192,12 @@ export const MessageItem: React.FC<MessageItemProps> = ({
               )}
 
               {/* Message Bubble */}
-              <div className="px-4 py-3 rounded-2xl rounded-tr-xs bg-secondary text-secondary-foreground text-sm leading-relaxed whitespace-pre-wrap break-words border border-border/40 shadow-xs">
+              <div className="px-4 py-2.5 rounded-3xl bg-muted text-foreground text-[15px] leading-relaxed whitespace-pre-wrap break-words">
                 {message.content}
               </div>
 
               {/* Actions toolbar */}
-              <div className="flex items-center gap-1 mt-1 opacity-0 group-hover:opacity-100 transition-opacity text-xs text-muted-foreground">
+              <div className="flex items-center gap-1 mt-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity text-xs text-muted-foreground">
                 <button
                   type="button"
                   onClick={() => setIsEditing(true)}
@@ -241,7 +241,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
       <div className="w-full max-w-full md:max-w-3xl flex flex-col items-start">
         {/* Attribution header */}
         <div className="flex items-center gap-2 mb-1 text-[11px] text-muted-foreground select-none">
-          <span className="font-serif font-medium text-foreground lowercase">bamboo</span>
+          <span className="font-medium text-foreground lowercase">bamboo</span>
           {message.modelName && (
             <>
               <span aria-hidden="true">·</span>
@@ -259,7 +259,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
         {/* Content body */}
         <div
           ref={contentRef}
-          className="w-full text-foreground text-sm leading-relaxed break-words"
+          className="w-full text-foreground text-[15px] leading-relaxed break-words"
         >
           {message.content ? (
             <div
@@ -292,7 +292,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
 
         {/* Assistant Actions toolbar */}
         {!message.isStreaming && (
-          <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground opacity-80 group-hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground opacity-80 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
             <button
               type="button"
               onClick={handleCopyMessage}
