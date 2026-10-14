@@ -52,12 +52,12 @@ export const Dialog: React.FC<DialogProps> = ({
         ref={dialogRef}
         className={`bamboo-pop relative z-10 flex max-h-[92dvh] w-full ${maxWidth} flex-col overflow-hidden rounded-t-3xl border border-border/15 bg-card text-card-foreground shadow-2xl sm:max-h-[90dvh] sm:rounded-3xl`}
       >
-        <div className="flex items-start justify-between gap-4 border-b border-border/10 px-5 py-4 sm:px-6">
+        <div className="flex items-start justify-between gap-4 border-b border-border/10 px-5 py-4 sm:px-7 sm:py-5">
           <div className="min-w-0">
-            <h2 id="dialog-title" className="text-base font-semibold text-foreground">
+            <h2 id="dialog-title" className="text-lg font-semibold text-foreground">
               {title}
             </h2>
-            {description && <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>}
+            {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
           </div>
           <button
             type="button"
@@ -68,7 +68,7 @@ export const Dialog: React.FC<DialogProps> = ({
             <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto overscroll-contain p-5 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))] sm:p-6">
+        <div className="flex-1 overflow-y-auto overscroll-contain p-5 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))] sm:p-7">
           {children}
         </div>
       </div>

@@ -105,16 +105,16 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
       description="Personalize your local workspace profile and optional device lock."
       maxWidth="max-w-lg"
     >
-      <div className="space-y-6 text-xs">
+      <div className="space-y-6 text-sm">
         {/* Profile Info Form */}
         <form onSubmit={handleSaveInfo} className="space-y-3">
-          <div className="flex items-center gap-3 pb-3 border-b border-border">
+          <div className="flex items-center gap-3 pb-3 border-b border-border/15">
             <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/30 text-primary font-bold text-base flex items-center justify-center shrink-0">
               {avatarInitials.slice(0, 2).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
               <span className="font-semibold text-foreground text-sm block">Personal Profile</span>
-              <span className="text-muted-foreground text-[11px]">
+              <span className="text-muted-foreground text-[13px]">
                 Stored entirely on this device in browser IndexedDB.
               </span>
             </div>
@@ -122,7 +122,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
 
           <div className="grid grid-cols-3 gap-3">
             <div className="col-span-2">
-              <label className="block text-[11px] font-medium text-foreground mb-1">
+              <label className="block text-[13px] font-medium text-foreground mb-1.5">
                 Display Name / Username
               </label>
               <input
@@ -135,11 +135,11 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                     setAvatarInitials(e.target.value.slice(0, 2).toUpperCase());
                   }
                 }}
-                className="w-full px-2.5 py-1.5 text-xs rounded-md border border-border bg-input/20 text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                className="w-full px-3.5 py-2.5 text-base rounded-xl border border-border/15 bg-muted/40 text-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/25"
               />
             </div>
             <div>
-              <label className="block text-[11px] font-medium text-foreground mb-1">
+              <label className="block text-[13px] font-medium text-foreground mb-1.5">
                 Avatar Initials
               </label>
               <input
@@ -147,13 +147,13 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                 maxLength={3}
                 value={avatarInitials}
                 onChange={(e) => setAvatarInitials(e.target.value.toUpperCase())}
-                className="w-full px-2.5 py-1.5 text-xs rounded-md border border-border bg-input/20 text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-ring text-center"
+                className="w-full px-3.5 py-2.5 text-base rounded-xl border border-border/15 bg-muted/40 text-foreground font-mono focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/25 text-center"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-[11px] font-medium text-foreground mb-1">
+            <label className="block text-[13px] font-medium text-foreground mb-1.5">
               Short Bio or Role (Optional)
             </label>
             <input
@@ -161,14 +161,14 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               placeholder="e.g. Software Engineer & Researcher"
               value={bio}
               onChange={(e) => setBio(e.target.value)}
-              className="w-full px-2.5 py-1.5 text-xs rounded-md border border-border bg-input/20 text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              className="w-full px-3.5 py-2.5 text-base rounded-xl border border-border/15 bg-muted/40 text-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/25"
             />
           </div>
 
           <div className="flex justify-end pt-1">
             <button
               type="submit"
-              className="px-3.5 py-1.5 rounded-md bg-primary text-primary-foreground font-medium hover:opacity-90 transition cursor-pointer"
+              className="px-4 py-2.5 rounded-xl bg-primary text-primary-foreground font-medium hover:opacity-90 transition cursor-pointer"
             >
               Save Profile
             </button>
@@ -176,21 +176,21 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
         </form>
 
         {/* Local Device Lock Section */}
-        <div className="pt-4 border-t border-border space-y-3">
+        <div className="pt-4 border-t border-border/15 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               <Shield className="w-4 h-4 text-primary" />
-              <span className="font-semibold text-foreground text-xs">Local Device Privacy Lock</span>
+              <span className="font-semibold text-foreground text-sm">Local Device Privacy Lock</span>
             </div>
             {profile.hasPasscode && (
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-primary/10 text-primary border border-primary/20">
+              <span className="px-2 py-0.5 rounded-lg text-xs font-mono bg-primary/10 text-primary border border-primary/20">
                 Lock Enabled
               </span>
             )}
           </div>
 
           {/* Security Disclaimer Notice */}
-          <div className="p-2.5 rounded-md border border-border bg-muted/30 text-[11px] leading-relaxed text-muted-foreground space-y-1">
+          <div className="p-2.5 rounded-xl border border-border/15 bg-muted/30 text-[13px] leading-relaxed text-muted-foreground space-y-1">
             <p>
               <strong>Security Model:</strong> This local lock is a convenience feature to prevent casual inspection or shoulder-surfing on your current device. It uses browser-native Web Crypto PBKDF2 (100,000 rounds).
             </p>
@@ -200,23 +200,23 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
           </div>
 
           {profile.hasPasscode ? (
-            <div className="flex items-center justify-between p-2.5 rounded-md border border-border bg-card">
+            <div className="flex items-center justify-between p-2.5 rounded-xl border border-border/15 bg-card">
               <div>
                 <span className="font-medium text-foreground block">Passcode protection active</span>
-                <span className="text-muted-foreground text-[11px]">
+                <span className="text-muted-foreground text-[13px]">
                   Requires passcode to unlock workspace.
                 </span>
               </div>
               <button
                 type="button"
                 onClick={handleRemovePasscode}
-                className="px-2.5 py-1 rounded border border-destructive/40 text-destructive hover:bg-destructive/10 text-xs font-medium cursor-pointer"
+                className="px-2.5 py-1 rounded-lg border border-destructive/40 text-destructive hover:bg-destructive/10 text-sm font-medium cursor-pointer"
               >
                 Disable Lock
               </button>
             </div>
           ) : (
-            <form onSubmit={handleSetPasscode} className="space-y-2 p-3 rounded-lg border border-border bg-card">
+            <form onSubmit={handleSetPasscode} className="space-y-2 p-3 rounded-xl border border-border/15 bg-card">
               <span className="font-medium text-foreground block">Enable Passcode Lock</span>
               <div className="grid grid-cols-2 gap-2">
                 <input
@@ -225,7 +225,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                   placeholder="New passcode"
                   value={newPasscode}
                   onChange={(e) => setNewPasscode(e.target.value)}
-                  className="px-2.5 py-1.5 text-xs rounded border border-border bg-input/20 text-foreground"
+                  className="px-3.5 py-2.5 text-base rounded-lg border border-border/15 bg-muted/40 text-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/25"
                 />
                 <input
                   type="password"
@@ -233,19 +233,19 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
                   placeholder="Confirm passcode"
                   value={confirmPasscode}
                   onChange={(e) => setConfirmPasscode(e.target.value)}
-                  className="px-2.5 py-1.5 text-xs rounded border border-border bg-input/20 text-foreground"
+                  className="px-3.5 py-2.5 text-base rounded-lg border border-border/15 bg-muted/40 text-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/25"
                 />
               </div>
 
               {passcodeError && (
-                <p className="text-[11px] text-destructive flex items-center gap-1">
-                  <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
+                <p className="text-[13px] text-destructive flex items-center gap-1">
+                  <ShieldAlert className="w-4 h-4 shrink-0" />
                   <span>{passcodeError}</span>
                 </p>
               )}
 
               {passcodeSuccess && (
-                <p className="text-[11px] text-primary">
+                <p className="text-[13px] text-primary">
                   {passcodeSuccess}
                 </p>
               )}
@@ -253,7 +253,7 @@ export const ProfileModal: React.FC<ProfileModalProps> = ({
               <div className="flex justify-end pt-1">
                 <button
                   type="submit"
-                  className="px-3 py-1 rounded bg-primary text-primary-foreground text-xs font-medium cursor-pointer"
+                  className="px-3 py-1 rounded-lg bg-primary text-primary-foreground text-sm font-medium cursor-pointer"
                 >
                   Enable Lock
                 </button>

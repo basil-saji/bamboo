@@ -6,19 +6,19 @@
 
 :root {
   --card: hsl(0,0%,100%);
-  --ring: hsl(0,100%,45%);
+  --ring: hsl(217,92%,60%);
   --input: hsl(0,0%,100%);
   --muted: hsl(0,0%,96%);
   --accent: hsl(45,100%,50%);
   --border: hsl(0,0%,0%);
   --radius: 0px;
   --chart-1: hsl(0,0%,0%);
-  --chart-2: hsl(0,100%,45%);
+  --chart-2: hsl(217,92%,60%);
   --chart-3: hsl(45,100%,50%);
   --chart-4: hsl(120,20%,35%);
   --chart-5: hsl(20,40%,40%);
   --popover: hsl(0,0%,100%);
-  --primary: hsl(0, 100%, 43%);
+  --primary: hsl(217,92%,60%);
   --sidebar: hsl(0,0%,98%);
   --spacing: 0.25rem;
   --font-mono: 'SF Mono', 'Courier New', monospace;
@@ -30,7 +30,7 @@
   --destructive: hsl(0,100%,40%);
   --shadow-blur: 0px;
   --shadow-color: hsl(0,0%,0%);
-  --sidebar-ring: hsl(0,100%,45%);
+  --sidebar-ring: hsl(217,92%,60%);
   --shadow-spread: 0px;
   --letter-spacing: -0.02em;
   --shadow-opacity: 1;
@@ -39,7 +39,7 @@
   --card-foreground: hsl(0,0%,0%);
   --shadow-offset-x: 3px;
   --shadow-offset-y: 3px;
-  --sidebar-primary: hsl(0,100%,45%);
+  --sidebar-primary: hsl(217,92%,60%);
   --muted-foreground: hsl(0,0%,40%);
   --accent-foreground: hsl(0,0%,0%);
   --popover-foreground: hsl(0,0%,0%);
@@ -56,19 +56,19 @@
 
 .dark {
   --card: hsl(0,0%,4%);
-  --ring: hsl(0,100%,50%);
+  --ring: hsl(217,92%,60%);
   --input: hsl(0,0%,0%);
   --muted: hsl(0,0%,12%);
   --accent: hsl(45,100%,55%);
   --border: hsl(0,0%,100%);
   --radius: 0px;
   --chart-1: hsl(0,0%,100%);
-  --chart-2: hsl(0,100%,50%);
+  --chart-2: hsl(217,92%,60%);
   --chart-3: hsl(45,100%,55%);
   --chart-4: hsl(120,15%,45%);
   --chart-5: hsl(20,30%,50%);
   --popover: hsl(0,0%,4%);
-  --primary: hsl(0,100%,50%);
+  --primary: hsl(217,92%,60%);
   --sidebar: hsl(0,0%,2%);
   --spacing: 0.25rem;
   --font-mono: 'SF Mono', 'Courier New', monospace;
@@ -80,7 +80,7 @@
   --destructive: hsl(0,100%,60%);
   --shadow-blur: 0px;
   --shadow-color: hsl(0,0%,100%);
-  --sidebar-ring: hsl(0,100%,50%);
+  --sidebar-ring: hsl(217,92%,60%);
   --shadow-spread: 0px;
   --letter-spacing: -0.02em;
   --shadow-opacity: 1;
@@ -89,7 +89,7 @@
   --card-foreground: hsl(0,0%,100%);
   --shadow-offset-x: 3px;
   --shadow-offset-y: 3px;
-  --sidebar-primary: hsl(0,100%,50%);
+  --sidebar-primary: hsl(217,92%,60%);
   --muted-foreground: hsl(0,0%,70%);
   --accent-foreground: hsl(0,0%,0%);
   --popover-foreground: hsl(0,0%,100%);
@@ -138,7 +138,7 @@
   /* literal values (not var()) so the font utilities can never self-reference */
   --font-sans: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   --font-serif: 'Georgia', serif;
-  --font-mono: 'SF Mono', 'Courier New', monospace;
+  --font-mono: 'SF Mono', ui-monospace, 'Cascadia Code', Menlo, Consolas, 'Courier New', monospace;
 }
 
 /* ---------- Base ---------- */

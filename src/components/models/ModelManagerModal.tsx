@@ -233,71 +233,71 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
       onClose={onClose}
       title="Model Profiles"
       description="Connect and test your OpenAI-compatible inference backends."
-      maxWidth="max-w-2xl"
+      maxWidth="max-w-3xl"
     >
       <div className="space-y-6">
         {!isFormActive ? (
           <div>
             <div className="flex items-center justify-between mb-4">
-              <span className="text-xs text-muted-foreground font-sans">
+              <span className="text-sm text-muted-foreground font-sans">
                 {models.length} configured profile{models.length !== 1 ? 's' : ''}
               </span>
               <button
                 type="button"
                 onClick={handleStartAdd}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:opacity-90 transition cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-5 py-2.5 text-sm font-medium rounded-full bg-primary text-primary-foreground hover:opacity-90 transition cursor-pointer"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Plus className="w-4 h-4" />
                 <span>Add model</span>
               </button>
             </div>
 
             {models.length === 0 ? (
-              <div className="text-center py-10 px-4 rounded-xl border border-dashed border-border bg-muted/20">
-                <Cpu className="w-8 h-8 mx-auto text-primary mb-2 opacity-80" />
+              <div className="text-center py-10 px-4 rounded-xl border border-dashed border-border/15 bg-muted/20">
+                <Cpu className="w-10 h-10 mx-auto text-primary mb-2 opacity-80" />
                 <h3 className="text-sm font-medium text-foreground">No model profiles configured</h3>
-                <p className="text-xs text-muted-foreground max-w-sm mx-auto mt-1 mb-4 leading-relaxed font-sans">
+                <p className="text-sm text-muted-foreground max-w-sm mx-auto mt-1 mb-4 leading-relaxed font-sans">
                   Bamboo starts completely empty. Connect your local Ollama, LM Studio, llama-server, or remote tunnel to start chatting.
                 </p>
                 <button
                   type="button"
                   onClick={handleStartAdd}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:opacity-90 transition cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-xl bg-primary text-primary-foreground hover:opacity-90 transition cursor-pointer"
                 >
-                  <Plus className="w-3.5 h-3.5" />
+                  <Plus className="w-4 h-4" />
                   <span>Configure your first model</span>
                 </button>
               </div>
             ) : (
-              <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
+              <div className="space-y-2 overflow-y-auto">
                 {models.map((m) => {
                   const isActive = activeModelId === m.id;
                   return (
                     <div
                       key={m.id}
-                      className={`p-3 rounded-lg border transition-colors flex items-center justify-between gap-3 ${
+                      className={`p-4 rounded-2xl border transition-colors flex flex-wrap items-center justify-between gap-3 ${
                         isActive
-                          ? 'border-primary/40 bg-primary/5'
-                          : 'border-border bg-card hover:bg-muted/30'
+                          ? 'border-primary/50 bg-primary/5'
+                          : 'border-border/15 bg-card hover:bg-muted/30'
                       }`}
                     >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-sm text-foreground truncate">
+                      <div className="flex-1 min-w-[12rem]">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-medium text-base text-foreground truncate">
                             {m.name}
                           </span>
                           {m.isDefault && (
-                            <span className="text-[10px] font-mono uppercase tracking-wider text-primary font-semibold">
+                            <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
                               Default
                             </span>
                           )}
                           {isActive && (
-                            <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
-                              (Active)
+                            <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                              Active
                             </span>
                           )}
                         </div>
-                        <div className="text-xs text-muted-foreground font-mono truncate mt-0.5">
+                        <div className="text-[13px] text-muted-foreground font-mono truncate mt-1">
                           {m.modelId} · {m.baseUrl}
                         </div>
                       </div>
@@ -307,7 +307,7 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
                           <button
                             type="button"
                             onClick={() => onSelectModel(m.id)}
-                            className="px-2 py-1 text-xs rounded hover:bg-muted text-foreground transition cursor-pointer"
+                            className="px-2 py-1 text-sm rounded-lg hover:bg-muted text-foreground transition cursor-pointer"
                             title="Set as active chat model"
                           >
                             Select
@@ -316,29 +316,29 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
                         <button
                           type="button"
                           onClick={() => handleStartEdit(m)}
-                          className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition cursor-pointer"
+                          className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition cursor-pointer"
                           title="Edit profile"
                           aria-label="Edit model profile"
                         >
-                          <Edit2 className="w-3.5 h-3.5" />
+                          <Edit2 className="w-4 h-4" />
                         </button>
                         <button
                           type="button"
                           onClick={() => onDuplicateModel(m.id)}
-                          className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition cursor-pointer"
+                          className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition cursor-pointer"
                           title="Duplicate profile"
                           aria-label="Duplicate model profile"
                         >
-                          <Copy className="w-3.5 h-3.5" />
+                          <Copy className="w-4 h-4" />
                         </button>
                         <button
                           type="button"
                           onClick={() => onRemoveModel(m.id)}
-                          className="p-1.5 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition cursor-pointer"
+                          className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition cursor-pointer"
                           title="Delete profile"
                           aria-label="Delete model profile"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
@@ -349,23 +349,23 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
           </div>
         ) : (
           /* Profile Add/Edit Form */
-          <form onSubmit={handleSave} className="space-y-4">
-            <div className="flex items-center justify-between pb-2 border-b border-border">
+          <form onSubmit={handleSave} className="space-y-5">
+            <div className="flex items-center justify-between pb-2 border-b border-border/15">
               <h3 className="text-sm font-semibold text-foreground">
                 {editingId ? 'Edit Model Profile' : 'Configure Model Profile'}
               </h3>
               <button
                 type="button"
                 onClick={resetForm}
-                className="text-xs text-muted-foreground hover:text-foreground transition cursor-pointer"
+                className="text-sm text-muted-foreground hover:text-foreground transition cursor-pointer"
               >
                 Back to list
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-foreground mb-1">
+                <label className="block text-sm font-medium text-foreground mb-1.5">
                   Display Name <span className="text-destructive">*</span>
                 </label>
                 <input
@@ -374,12 +374,12 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
                   placeholder="e.g. Local Llama 3 or Remote Qwen"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3 py-1.5 text-xs rounded-md border border-border bg-input/20 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                  className="w-full px-3.5 py-2.5 text-base rounded-xl border border-border/15 bg-muted/40 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/25"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-foreground mb-1">
+                <label className="block text-sm font-medium text-foreground mb-1.5">
                   API Base URL <span className="text-destructive">*</span>
                 </label>
                 <input
@@ -388,43 +388,43 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
                   placeholder="http://localhost:11434/v1 or https://xxxx.ngrok-free.app/v1"
                   value={baseUrl}
                   onChange={(e) => setBaseUrl(e.target.value)}
-                  className="w-full px-3 py-1.5 text-xs rounded-md border border-border bg-input/20 text-foreground placeholder:text-muted-foreground font-mono focus:outline-none focus:ring-1 focus:ring-ring"
+                  className="w-full px-3.5 py-2.5 text-base rounded-xl border border-border/15 bg-muted/40 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/25"
                 />
-                <p className="text-[10px] text-muted-foreground mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5">
                   Format: <code className="font-mono">http://localhost:11434/v1</code> or <code className="font-mono">https://xxxx.ngrok-free.app/v1</code>
                 </p>
               </div>
             </div>
 
             {/* Effective Endpoint Routes Preview & Diagnostic Box */}
-            <div className="p-3 rounded-lg border border-border/80 bg-muted/25 space-y-2 text-xs">
+            <div className="p-3 rounded-xl border border-border/15 bg-muted/25 space-y-2 text-sm">
               <div className="flex items-center justify-between">
-                <span className="font-medium text-foreground text-[11px] uppercase tracking-wider font-mono">
+                <span className="font-medium text-foreground text-sm">
                   Effective Route Construction
                 </span>
                 <button
                   type="button"
                   onClick={() => setShowAdvancedRoutes(!showAdvancedRoutes)}
-                  className="text-[11px] text-primary hover:underline cursor-pointer"
+                  className="text-[13px] text-primary hover:underline cursor-pointer"
                 >
                   {showAdvancedRoutes ? 'Hide custom route' : 'Customize route'}
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px] font-mono">
-                <div className="p-2 rounded bg-card border border-border/40">
-                  <span className="text-muted-foreground block text-[10px]">Model Discovery (GET):</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[13px] font-mono">
+                <div className="p-2 rounded-lg bg-card border border-border/15">
+                  <span className="text-muted-foreground block text-xs">Model Discovery (GET):</span>
                   <span className="text-foreground truncate block">{routes.discoveryUrl || 'None'}</span>
                 </div>
-                <div className="p-2 rounded bg-card border border-border/40">
-                  <span className="text-muted-foreground block text-[10px]">Chat Completion (POST):</span>
+                <div className="p-2 rounded-lg bg-card border border-border/15">
+                  <span className="text-muted-foreground block text-xs">Chat Completion (POST):</span>
                   <span className="text-foreground truncate block">{routes.chatUrl || 'None'}</span>
                 </div>
               </div>
 
               {showAdvancedRoutes && (
-                <div className="pt-2 border-t border-border/40">
-                  <label className="block text-[11px] font-medium text-foreground mb-1">
+                <div className="pt-2 border-t border-border/15">
+                  <label className="block text-[13px] font-medium text-foreground mb-1.5">
                     Custom Chat Path Override <span className="text-muted-foreground">(Optional, default: /chat/completions)</span>
                   </label>
                   <input
@@ -432,14 +432,14 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
                     placeholder="/chat/completions"
                     value={customChatPath}
                     onChange={(e) => setCustomChatPath(e.target.value)}
-                    className="w-full px-2.5 py-1 text-xs rounded border border-border bg-input/20 text-foreground font-mono"
+                    className="w-full px-3.5 py-2.5 text-base rounded-lg border border-border/15 bg-muted/40 text-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/25"
                   />
                 </div>
               )}
 
               {/* Mixed Content Warning Banner */}
               {routes.isMixedContentRisk && (
-                <div className="p-2 rounded bg-destructive/10 border border-destructive/20 text-destructive text-[11px] flex items-start gap-1.5">
+                <div className="p-2 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-[13px] flex items-start gap-1.5">
                   <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                   <span>
                     Mixed Content Warning: You are loading Bamboo over HTTPS, but this endpoint uses remote HTTP. Browsers block remote HTTP requests from HTTPS sites. Use an HTTPS ngrok/tunnel or test against localhost.
@@ -451,20 +451,20 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
             {/* Model ID Selection & Fetching */}
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="text-xs font-medium text-foreground">
+                <label className="text-sm font-medium text-foreground">
                   Backend Model ID <span className="text-destructive">*</span>
                 </label>
                 <button
                   type="button"
                   onClick={handleFetchModels}
                   disabled={isFetchingModels || !baseUrl.trim()}
-                  className="inline-flex items-center gap-1 text-[11px] text-primary hover:underline cursor-pointer disabled:opacity-50"
+                  className="inline-flex items-center gap-1 text-[13px] text-primary hover:underline cursor-pointer disabled:opacity-50"
                   title="Query GET /v1/models"
                 >
                   {isFetchingModels ? (
-                    <Loader2 className="w-3 h-3 animate-spin" />
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   ) : (
-                    <RefreshCw className="w-3 h-3" />
+                    <RefreshCw className="w-3.5 h-3.5" />
                   )}
                   <span>Fetch models from server</span>
                 </button>
@@ -474,7 +474,7 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
                 <select
                   value={modelId}
                   onChange={(e) => setModelId(e.target.value)}
-                  className="w-full mb-1.5 px-3 py-1.5 text-xs rounded-md border border-border bg-card text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-ring"
+                  className="w-full mb-1.5 px-3.5 py-2.5 text-base rounded-xl border border-border/15 bg-card text-foreground font-mono focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/25"
                 >
                   <option value="">Select discovered model...</option>
                   {fetchedModels.map((id) => (
@@ -491,12 +491,12 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
                 placeholder="e.g. llama3.2, mistral:7b, gpt-4o, qwen2.5:7b"
                 value={modelId}
                 onChange={(e) => setModelId(e.target.value)}
-                className="w-full px-3 py-1.5 text-xs rounded-md border border-border bg-input/20 text-foreground placeholder:text-muted-foreground font-mono focus:outline-none focus:ring-1 focus:ring-ring"
+                className="w-full px-3.5 py-2.5 text-base rounded-xl border border-border/15 bg-muted/40 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/25"
               />
 
               {fetchError && (
-                <p className="text-[11px] text-muted-foreground mt-1 flex items-start gap-1">
-                  <AlertCircle className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+                <p className="text-[13px] text-muted-foreground mt-1 flex items-start gap-1">
+                  <AlertCircle className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                   <span>
                     Note: {fetchError} (Model discovery is optional; you can enter your model ID manually and test chat inference below).
                   </span>
@@ -506,7 +506,7 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
 
             {/* API Key */}
             <div>
-              <label className="block text-xs font-medium text-foreground mb-1">
+              <label className="block text-sm font-medium text-foreground mb-1.5">
                 API Key <span className="text-muted-foreground">(Optional for local endpoints)</span>
               </label>
               <input
@@ -514,13 +514,13 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
                 placeholder="Leave blank for local Ollama / LM Studio"
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
-                className="w-full px-3 py-1.5 text-xs rounded-md border border-border bg-input/20 text-foreground placeholder:text-muted-foreground font-mono focus:outline-none focus:ring-1 focus:ring-ring"
+                className="w-full px-3.5 py-2.5 text-base rounded-xl border border-border/15 bg-muted/40 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/25"
               />
             </div>
 
             {/* System Prompt */}
             <div>
-              <label className="block text-xs font-medium text-foreground mb-1">
+              <label className="block text-sm font-medium text-foreground mb-1.5">
                 Profile System Prompt <span className="text-muted-foreground">(Optional)</span>
               </label>
               <textarea
@@ -528,14 +528,14 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
                 placeholder="e.g. You are a helpful, thoughtful coding and research assistant."
                 value={systemPrompt}
                 onChange={(e) => setSystemPrompt(e.target.value)}
-                className="w-full px-3 py-1.5 text-xs rounded-md border border-border bg-input/20 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring resize-none"
+                className="w-full px-3.5 py-2.5 text-base rounded-xl border border-border/15 bg-muted/40 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/25 resize-none"
               />
             </div>
 
             {/* Sliders */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
               <div>
-                <label className="block text-[11px] font-medium text-foreground mb-1">
+                <label className="block text-[13px] font-medium text-foreground mb-1.5">
                   Temperature: {temperature}
                 </label>
                 <input
@@ -550,7 +550,7 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[11px] font-medium text-foreground mb-1">
+                <label className="block text-[13px] font-medium text-foreground mb-1.5">
                   Top-P: {topP}
                 </label>
                 <input
@@ -565,7 +565,7 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-[11px] font-medium text-foreground mb-1">
+                <label className="block text-[13px] font-medium text-foreground mb-1.5">
                   Max Output Tokens
                 </label>
                 <input
@@ -576,46 +576,46 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
                   onChange={(e) =>
                     setMaxTokens(e.target.value ? parseInt(e.target.value, 10) : undefined)
                   }
-                  className="w-full px-2 py-1 text-xs rounded border border-border bg-input/20 text-foreground"
+                  className="w-full px-3.5 py-2.5 text-base rounded-lg border border-border/15 bg-muted/40 text-foreground focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/25"
                 />
               </div>
             </div>
 
             {/* Checkboxes */}
             <div className="flex flex-wrap items-center gap-4 pt-1">
-              <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer">
+              <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
                 <input
                   type="checkbox"
                   checked={streaming}
                   onChange={(e) => setStreaming(e.target.checked)}
-                  className="accent-primary rounded"
+                  className="accent-primary rounded-lg"
                 />
                 <span>Enable response streaming (SSE)</span>
               </label>
 
-              <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer">
+              <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
                 <input
                   type="checkbox"
                   checked={isDefault}
                   onChange={(e) => setIsDefault(e.target.checked)}
-                  className="accent-primary rounded"
+                  className="accent-primary rounded-lg"
                 />
                 <span>Set as default model profile</span>
               </label>
             </div>
 
             {/* SEPARATE DIAGNOSTIC ACTIONS (Section 8 of prompt) */}
-            <div className="pt-3 border-t border-border space-y-2.5">
+            <div className="pt-3 border-t border-border/15 space-y-2.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-foreground">
+                <span className="text-sm font-semibold text-foreground">
                   Connection & Inference Diagnostics
                 </span>
                 <button
                   type="button"
                   onClick={() => setShowEndpointHelp(!showEndpointHelp)}
-                  className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground cursor-pointer"
+                  className="inline-flex items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground cursor-pointer"
                 >
-                  <HelpCircle className="w-3.5 h-3.5 text-primary" />
+                  <HelpCircle className="w-4 h-4 text-primary" />
                   <span>Setup Guide</span>
                 </button>
               </div>
@@ -625,10 +625,10 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
                   type="button"
                   onClick={handleTestDiscovery}
                   disabled={diagnosticLoading !== null || !baseUrl.trim()}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-border bg-card hover:bg-muted text-foreground transition cursor-pointer disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium rounded-xl border border-border/15 bg-card hover:bg-muted text-foreground transition cursor-pointer disabled:opacity-50"
                   title="Test GET /v1/models endpoint"
                 >
-                  {diagnosticLoading === 'discovery' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5 text-primary" />}
+                  {diagnosticLoading === 'discovery' ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4 text-primary" />}
                   <span>Test Discovery (/models)</span>
                 </button>
 
@@ -636,10 +636,10 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
                   type="button"
                   onClick={handleTestChat}
                   disabled={diagnosticLoading !== null || !baseUrl.trim() || !modelId.trim()}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-border bg-card hover:bg-muted text-foreground transition cursor-pointer disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium rounded-xl border border-border/15 bg-card hover:bg-muted text-foreground transition cursor-pointer disabled:opacity-50"
                   title="Sends a minimal 'Ping' prompt to verify real chat completion"
                 >
-                  {diagnosticLoading === 'chat' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5 text-primary" />}
+                  {diagnosticLoading === 'chat' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4 text-primary" />}
                   <span>Test Chat Inference</span>
                 </button>
 
@@ -647,10 +647,10 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
                   type="button"
                   onClick={handleTestStreaming}
                   disabled={diagnosticLoading !== null || !baseUrl.trim() || !modelId.trim()}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border border-border bg-card hover:bg-muted text-foreground transition cursor-pointer disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium rounded-xl border border-border/15 bg-card hover:bg-muted text-foreground transition cursor-pointer disabled:opacity-50"
                   title="Tests incremental SSE streaming event delivery"
                 >
-                  {diagnosticLoading === 'streaming' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5 text-primary" />}
+                  {diagnosticLoading === 'streaming' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4 text-primary" />}
                   <span>Test Streaming (SSE)</span>
                 </button>
               </div>
@@ -658,7 +658,7 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
               {/* Diagnostic Result Box */}
               {diagnosticResult && (
                 <div
-                  className={`p-3 rounded-lg text-xs space-y-1.5 ${
+                  className={`p-3 rounded-xl text-sm space-y-1.5 ${
                     diagnosticResult.success
                       ? 'bg-primary/10 border border-primary/30 text-foreground'
                       : 'bg-destructive/10 border border-destructive/30 text-destructive'
@@ -673,14 +673,14 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
                     <div className="flex-1 space-y-1 leading-relaxed">
                       <div className="font-semibold">{diagnosticResult.message}</div>
                       {diagnosticResult.details && (
-                        <div className="text-[11px] opacity-90">{diagnosticResult.details}</div>
+                        <div className="text-[13px] opacity-90">{diagnosticResult.details}</div>
                       )}
-                      <div className="text-[10px] opacity-75 font-mono pt-0.5">
+                      <div className="text-xs opacity-75 font-mono pt-0.5">
                         Route: {diagnosticResult.effectiveUrl} · Latency: {diagnosticResult.elapsedMs}ms
                         {diagnosticResult.httpStatus ? ` · HTTP ${diagnosticResult.httpStatus}` : ''}
                       </div>
                       {diagnosticResult.nextStep && (
-                        <div className="text-[11px] font-medium pt-1 text-foreground/90">
+                        <div className="text-[13px] font-medium pt-1 text-foreground/90">
                           Next step: {diagnosticResult.nextStep}
                         </div>
                       )}
@@ -691,17 +691,17 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
             </div>
 
             {/* Action buttons */}
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-border">
+            <div className="sticky -bottom-5 z-10 -mx-5 -mb-5 flex items-center justify-end gap-2 border-t border-border/15 bg-card px-5 py-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))] sm:-bottom-7 sm:-mx-7 sm:-mb-7 sm:px-7">
               <button
                 type="button"
                 onClick={resetForm}
-                className="px-3.5 py-1.5 text-xs font-medium rounded-md border border-border hover:bg-muted text-foreground transition cursor-pointer"
+                className="px-4 py-2.5 text-sm font-medium rounded-xl border border-border/15 hover:bg-muted text-foreground transition cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-1.5 text-xs font-medium rounded-md bg-primary text-primary-foreground hover:opacity-90 transition cursor-pointer"
+                className="px-5 py-2.5 text-sm font-medium rounded-full bg-primary text-primary-foreground hover:opacity-90 transition cursor-pointer"
               >
                 {editingId ? 'Save Changes' : 'Create Profile'}
               </button>
@@ -711,39 +711,39 @@ export const ModelManagerModal: React.FC<ModelManagerModalProps> = ({
 
         {/* Backend & CORS Guidance */}
         {showEndpointHelp && (
-          <div className="p-3.5 rounded-xl border border-border bg-card text-xs space-y-2.5">
+          <div className="p-3.5 rounded-xl border border-border/15 bg-card text-sm space-y-2.5">
             <div className="font-semibold text-foreground flex items-center gap-1.5">
               <Terminal className="w-4 h-4 text-primary" />
               <span>Backend Setup & CORS Configuration Guide</span>
             </div>
-            <p className="text-muted-foreground text-[11px] leading-relaxed">
+            <p className="text-muted-foreground text-[13px] leading-relaxed">
               Because Bamboo is a browser application, backend model servers must permit cross-origin requests:
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px]">
-              <div className="p-2.5 rounded-lg bg-muted/40 border border-border/50">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[13px]">
+              <div className="p-2.5 rounded-xl bg-muted/40 border border-border/15">
                 <span className="font-semibold text-foreground block mb-0.5">Ollama:</span>
-                <code className="text-primary font-mono text-[10px] block mb-1">OLLAMA_ORIGINS="*" ollama serve</code>
-                <span className="text-muted-foreground text-[10px]">Default URL: http://localhost:11434/v1</span>
+                <code className="text-primary font-mono text-xs block mb-1">OLLAMA_ORIGINS="*" ollama serve</code>
+                <span className="text-muted-foreground text-xs">Default URL: http://localhost:11434/v1</span>
               </div>
 
-              <div className="p-2.5 rounded-lg bg-muted/40 border border-border/50">
+              <div className="p-2.5 rounded-xl bg-muted/40 border border-border/15">
                 <span className="font-semibold text-foreground block mb-0.5">llama.cpp / llama-server:</span>
-                <code className="text-primary font-mono text-[10px] block mb-1">./llama-server --cors -m model.gguf --port 8080</code>
-                <span className="text-muted-foreground text-[10px]">Default URL: http://localhost:8080/v1</span>
+                <code className="text-primary font-mono text-xs block mb-1">./llama-server --cors -m model.gguf --port 8080</code>
+                <span className="text-muted-foreground text-xs">Default URL: http://localhost:8080/v1</span>
               </div>
 
-              <div className="p-2.5 rounded-lg bg-muted/40 border border-border/50">
+              <div className="p-2.5 rounded-xl bg-muted/40 border border-border/15">
                 <span className="font-semibold text-foreground block mb-0.5">LM Studio:</span>
-                <span className="text-muted-foreground text-[10px] block mb-1">
+                <span className="text-muted-foreground text-xs block mb-1">
                   Open Local Server tab → Check "Enable CORS"
                 </span>
-                <span className="text-muted-foreground text-[10px]">Default URL: http://localhost:1234/v1</span>
+                <span className="text-muted-foreground text-xs">Default URL: http://localhost:1234/v1</span>
               </div>
 
-              <div className="p-2.5 rounded-lg bg-muted/40 border border-border/50">
+              <div className="p-2.5 rounded-xl bg-muted/40 border border-border/15">
                 <span className="font-semibold text-foreground block mb-0.5">ngrok Remote Tunnel:</span>
-                <code className="text-primary font-mono text-[10px] block mb-1">ngrok http 11434</code>
-                <span className="text-muted-foreground text-[10px]">
+                <code className="text-primary font-mono text-xs block mb-1">ngrok http 11434</code>
+                <span className="text-muted-foreground text-xs">
                   Use the HTTPS tunnel URL (e.g. https://xyz.ngrok-free.app/v1). Bamboo automatically includes header to skip warning page.
                 </span>
               </div>

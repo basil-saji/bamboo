@@ -137,7 +137,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
     return (
       <div className="w-full my-6 flex items-center justify-center select-none" role="separator">
         <div className="h-px bg-border flex-1 max-w-[120px]" />
-        <span className="px-3 text-[11px] text-muted-foreground uppercase tracking-wider text-center">
+        <span className="px-3 text-xs text-muted-foreground uppercase tracking-wider text-center">
           Context Boundary · Earlier messages excluded from model prompt
         </span>
         <div className="h-px bg-border flex-1 max-w-[120px]" />
@@ -182,7 +182,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
                   {message.attachments.map((att) => (
                     <div
                       key={att.id}
-                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] bg-muted/60 text-muted-foreground border border-border/15"
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-muted/60 text-muted-foreground border border-border/15"
                     >
                       <Paperclip className="w-3 h-3" />
                       <span className="truncate max-w-[160px]">{att.name}</span>
@@ -240,12 +240,12 @@ export const MessageItem: React.FC<MessageItemProps> = ({
     <div className="w-full flex justify-start my-4 group">
       <div className="w-full max-w-full md:max-w-3xl flex flex-col items-start">
         {/* Attribution header */}
-        <div className="flex items-center gap-2 mb-1 text-[11px] text-muted-foreground select-none">
+        <div className="flex items-center gap-2 mb-1.5 text-[13px] text-muted-foreground select-none">
           <span className="font-medium text-foreground lowercase">bamboo</span>
           {message.modelName && (
             <>
               <span aria-hidden="true">·</span>
-              <span className="font-mono">{message.modelName}</span>
+              <span>{message.modelName}</span>
             </>
           )}
           {message.isInterrupted && (
@@ -312,7 +312,7 @@ export const MessageItem: React.FC<MessageItemProps> = ({
                 aria-label="Regenerate response"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
-                <span className="text-[11px]">Regenerate</span>
+                <span className="text-xs">Regenerate</span>
               </button>
             )}
 

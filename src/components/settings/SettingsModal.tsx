@@ -177,11 +177,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     >
       <div className="flex flex-col md:flex-row gap-6 min-h-[380px]">
         {/* Navigation Tabs */}
-        <div className="flex md:flex-col gap-1 border-b md:border-b-0 md:border-r border-border pb-3 md:pb-0 md:pr-4 md:w-44 shrink-0 text-xs">
+        <div className="flex md:flex-col gap-1 border-b md:border-b-0 md:border-r border-border/15 pb-3 md:pb-0 md:pr-4 md:w-44 shrink-0 text-sm">
           <button
             type="button"
             onClick={() => setActiveTab('appearance')}
-            className={`w-full text-left px-3 py-2 rounded-md font-medium transition-colors cursor-pointer ${
+            className={`w-full text-left px-3 py-2 rounded-xl font-medium transition-colors cursor-pointer ${
               activeTab === 'appearance'
                 ? 'bg-muted text-foreground'
                 : 'text-muted-foreground hover:text-foreground'
@@ -192,7 +192,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('chat')}
-            className={`w-full text-left px-3 py-2 rounded-md font-medium transition-colors cursor-pointer ${
+            className={`w-full text-left px-3 py-2 rounded-xl font-medium transition-colors cursor-pointer ${
               activeTab === 'chat'
                 ? 'bg-muted text-foreground'
                 : 'text-muted-foreground hover:text-foreground'
@@ -203,7 +203,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('prompts')}
-            className={`w-full text-left px-3 py-2 rounded-md font-medium transition-colors cursor-pointer ${
+            className={`w-full text-left px-3 py-2 rounded-xl font-medium transition-colors cursor-pointer ${
               activeTab === 'prompts'
                 ? 'bg-muted text-foreground'
                 : 'text-muted-foreground hover:text-foreground'
@@ -214,7 +214,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('storage')}
-            className={`w-full text-left px-3 py-2 rounded-md font-medium transition-colors cursor-pointer ${
+            className={`w-full text-left px-3 py-2 rounded-xl font-medium transition-colors cursor-pointer ${
               activeTab === 'storage'
                 ? 'bg-muted text-foreground'
                 : 'text-muted-foreground hover:text-foreground'
@@ -225,7 +225,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           <button
             type="button"
             onClick={() => setActiveTab('pwa')}
-            className={`w-full text-left px-3 py-2 rounded-md font-medium transition-colors cursor-pointer ${
+            className={`w-full text-left px-3 py-2 rounded-xl font-medium transition-colors cursor-pointer ${
               activeTab === 'pwa'
                 ? 'bg-muted text-foreground'
                 : 'text-muted-foreground hover:text-foreground'
@@ -239,17 +239,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         <div className="flex-1 overflow-y-auto pr-1">
           {/* --- APPEARANCE --- */}
           {activeTab === 'appearance' && (
-            <div className="space-y-6 text-xs">
+            <div className="space-y-6 text-sm">
               <div>
                 <h3 className="font-semibold text-foreground text-sm mb-3">Theme</h3>
                 <div className="grid grid-cols-3 gap-3">
                   <button
                     type="button"
                     onClick={() => onThemeChange('light')}
-                    className={`p-3 rounded-lg border flex flex-col items-center gap-2 cursor-pointer transition-colors ${
+                    className={`p-3 rounded-xl border flex flex-col items-center gap-2 cursor-pointer transition-colors ${
                       theme === 'light'
                         ? 'border-primary bg-primary/10 text-primary font-medium'
-                        : 'border-border bg-card text-muted-foreground hover:text-foreground'
+                        : 'border-border/15 bg-card text-muted-foreground hover:text-foreground'
                     }`}
                   >
                     <Sun className="w-4 h-4" />
@@ -258,10 +258,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <button
                     type="button"
                     onClick={() => onThemeChange('dark')}
-                    className={`p-3 rounded-lg border flex flex-col items-center gap-2 cursor-pointer transition-colors ${
+                    className={`p-3 rounded-xl border flex flex-col items-center gap-2 cursor-pointer transition-colors ${
                       theme === 'dark'
                         ? 'border-primary bg-primary/10 text-primary font-medium'
-                        : 'border-border bg-card text-muted-foreground hover:text-foreground'
+                        : 'border-border/15 bg-card text-muted-foreground hover:text-foreground'
                     }`}
                   >
                     <Moon className="w-4 h-4" />
@@ -270,10 +270,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <button
                     type="button"
                     onClick={() => onThemeChange('system')}
-                    className={`p-3 rounded-lg border flex flex-col items-center gap-2 cursor-pointer transition-colors ${
+                    className={`p-3 rounded-xl border flex flex-col items-center gap-2 cursor-pointer transition-colors ${
                       theme === 'system'
                         ? 'border-primary bg-primary/10 text-primary font-medium'
-                        : 'border-border bg-card text-muted-foreground hover:text-foreground'
+                        : 'border-border/15 bg-card text-muted-foreground hover:text-foreground'
                     }`}
                   >
                     <Laptop className="w-4 h-4" />
@@ -282,9 +282,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-border">
+              <div className="pt-4 border-t border-border/15">
                 <h3 className="font-semibold text-foreground text-sm mb-2">Palette Identity</h3>
-                <p className="text-muted-foreground text-xs leading-relaxed">
+                <p className="text-muted-foreground text-sm leading-relaxed">
                   Bamboo uses a disciplined muted sage and olive palette with warm cream and charcoal surfaces.
                   No fluorescent yellows or artificial gradients are used.
                 </p>
@@ -294,7 +294,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
           {/* --- CHAT BEHAVIOR --- */}
           {activeTab === 'chat' && (
-            <div className="space-y-5 text-xs">
+            <div className="space-y-5 text-sm">
               <div>
                 <h3 className="font-semibold text-foreground text-sm mb-2">Keyboard Shortcuts</h3>
                 <label className="flex items-start gap-2.5 cursor-pointer">
@@ -304,22 +304,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     onChange={(e) =>
                       onUpdateSettings({ ...settings, enterToSend: e.target.checked })
                     }
-                    className="mt-0.5 accent-primary rounded"
+                    className="mt-0.5 accent-primary rounded-lg"
                   />
                   <div>
                     <span className="font-medium text-foreground block">
                       Press Enter to send message
                     </span>
-                    <span className="text-muted-foreground text-[11px]">
+                    <span className="text-muted-foreground text-[13px]">
                       When checked, Enter sends and Shift+Enter creates a newline. When unchecked, Cmd/Ctrl+Enter sends.
                     </span>
                   </div>
                 </label>
               </div>
 
-              <div className="pt-4 border-t border-border">
+              <div className="pt-4 border-t border-border/15">
                 <h3 className="font-semibold text-foreground text-sm mb-2">Global System Prompt</h3>
-                <p className="text-muted-foreground text-[11px] mb-2">
+                <p className="text-muted-foreground text-[13px] mb-2">
                   Default system instructions applied to conversations when no profile system prompt is set.
                 </p>
                 <textarea
@@ -329,14 +329,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     onUpdateSettings({ ...settings, defaultSystemPrompt: e.target.value })
                   }
                   placeholder="e.g. You are an expert engineer and clear communicator."
-                  className="w-full p-2.5 rounded-md border border-border bg-input/20 text-foreground resize-none focus:outline-none focus:ring-1 focus:ring-ring text-xs"
+                  className="w-full p-2.5 rounded-xl border border-border/15 bg-muted/40 text-foreground resize-none focus:outline-none focus:border-ring focus:ring-2 focus:ring-ring/25 text-base"
                 />
               </div>
 
-              <div className="pt-4 border-t border-border flex items-center justify-between">
+              <div className="pt-4 border-t border-border/15 flex items-center justify-between">
                 <div>
                   <h4 className="font-semibold text-foreground">Model Profiles</h4>
-                  <p className="text-muted-foreground text-[11px]">Configure custom endpoints and parameters.</p>
+                  <p className="text-muted-foreground text-[13px]">Configure custom endpoints and parameters.</p>
                 </div>
                 <button
                   type="button"
@@ -344,7 +344,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     onClose();
                     onOpenModelManager();
                   }}
-                  className="px-3 py-1.5 rounded-md border border-border hover:bg-muted font-medium transition cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl border border-border/15 hover:bg-muted font-medium transition cursor-pointer"
                 >
                   Manage models
                 </button>
@@ -354,33 +354,33 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
           {/* --- PROMPT PRESETS --- */}
           {activeTab === 'prompts' && (
-            <div className="space-y-4 text-xs">
+            <div className="space-y-4 text-sm">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="font-semibold text-foreground text-sm">System Prompt Library</h3>
-                  <p className="text-muted-foreground text-[11px]">Reusable prompts for different workflows.</p>
+                  <p className="text-muted-foreground text-[13px]">Reusable prompts for different workflows.</p>
                 </div>
                 {!isAddingPrompt && (
                   <button
                     type="button"
                     onClick={() => setIsAddingPrompt(true)}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-primary text-primary-foreground font-medium cursor-pointer"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary text-primary-foreground font-medium cursor-pointer"
                   >
-                    <Plus className="w-3.5 h-3.5" />
+                    <Plus className="w-4 h-4" />
                     <span>New preset</span>
                   </button>
                 )}
               </div>
 
               {isAddingPrompt && (
-                <form onSubmit={handleCreatePrompt} className="p-3 rounded-lg border border-border bg-muted/20 space-y-2">
+                <form onSubmit={handleCreatePrompt} className="p-3 rounded-xl border border-border/15 bg-muted/20 space-y-2">
                   <input
                     type="text"
                     required
                     placeholder="Preset Title (e.g. Code Reviewer)"
                     value={newPromptTitle}
                     onChange={(e) => setNewPromptTitle(e.target.value)}
-                    className="w-full px-2.5 py-1 text-xs rounded border border-border bg-card text-foreground"
+                    className="w-full px-2.5 py-1 text-sm rounded-lg border border-border/15 bg-card text-foreground"
                   />
                   <textarea
                     rows={3}
@@ -388,19 +388,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     placeholder="Prompt content..."
                     value={newPromptContent}
                     onChange={(e) => setNewPromptContent(e.target.value)}
-                    className="w-full p-2.5 text-xs rounded border border-border bg-card text-foreground resize-none"
+                    className="w-full p-2.5 text-sm rounded-lg border border-border/15 bg-card text-foreground resize-none"
                   />
                   <div className="flex justify-end gap-2">
                     <button
                       type="button"
                       onClick={() => setIsAddingPrompt(false)}
-                      className="px-2.5 py-1 text-xs rounded text-muted-foreground hover:text-foreground"
+                      className="px-2.5 py-1 text-sm rounded-lg text-muted-foreground hover:text-foreground"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="px-3 py-1 text-xs rounded bg-primary text-primary-foreground font-medium"
+                      className="px-3 py-1 text-sm rounded-lg bg-primary text-primary-foreground font-medium"
                     >
                       Save Preset
                     </button>
@@ -417,21 +417,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   prompts.map((p) => (
                     <div
                       key={p.id}
-                      className="p-2.5 rounded-lg border border-border bg-card flex items-start justify-between gap-2"
+                      className="p-2.5 rounded-xl border border-border/15 bg-card flex items-start justify-between gap-2"
                     >
                       <div className="min-w-0">
                         <div className="font-semibold text-foreground">{p.title}</div>
-                        <div className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">
+                        <div className="text-[13px] text-muted-foreground line-clamp-2 mt-0.5">
                           {p.content}
                         </div>
                       </div>
                       <button
                         type="button"
                         onClick={() => handleDeletePrompt(p.id)}
-                        className="p-1 rounded text-muted-foreground hover:text-destructive transition cursor-pointer shrink-0"
+                        className="p-1 rounded-lg text-muted-foreground hover:text-destructive transition cursor-pointer shrink-0"
                         title="Delete preset"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   ))
@@ -442,23 +442,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
           {/* --- STORAGE & DATA --- */}
           {activeTab === 'storage' && (
-            <div className="space-y-5 text-xs">
+            <div className="space-y-5 text-sm">
               {/* Storage Stats */}
-              <div className="p-3 rounded-lg border border-border bg-card space-y-1.5">
+              <div className="p-3 rounded-xl border border-border/15 bg-card space-y-1.5">
                 <div className="flex items-center gap-2 font-semibold text-foreground">
                   <Database className="w-4 h-4 text-primary" />
                   <span>Browser Storage (IndexedDB)</span>
                 </div>
-                <p className="text-muted-foreground text-[11px] leading-relaxed">
+                <p className="text-muted-foreground text-[13px] leading-relaxed">
                   All messages, model profiles, and settings are stored locally on this device.
                   Approximate usage: <strong>{formatBytes(storageInfo.usage)}</strong>
                 </p>
               </div>
 
               {/* Export Backup */}
-              <div className="space-y-2 pt-2 border-t border-border">
+              <div className="space-y-2 pt-2 border-t border-border/15">
                 <h4 className="font-semibold text-foreground">Export Backup</h4>
-                <p className="text-muted-foreground text-[11px]">
+                <p className="text-muted-foreground text-[13px]">
                   Download a complete JSON export of your profiles, conversations, and presets.
                 </p>
 
@@ -467,14 +467,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     type="checkbox"
                     checked={includeApiKeys}
                     onChange={(e) => setIncludeApiKeys(e.target.checked)}
-                    className="accent-primary rounded"
+                    className="accent-primary rounded-lg"
                   />
                   <span className="text-foreground">Include model API keys in export</span>
                 </label>
 
                 {includeApiKeys && (
-                  <div className="p-2.5 rounded bg-destructive/10 border border-destructive/20 text-destructive text-[11px] flex items-start gap-1.5">
-                    <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                  <div className="p-2.5 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-[13px] flex items-start gap-1.5">
+                    <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                     <span>Warning: Exported JSON file will contain sensitive API keys in readable plaintext.</span>
                   </div>
                 )}
@@ -482,21 +482,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <button
                   type="button"
                   onClick={handleExportBackup}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary text-primary-foreground font-medium hover:opacity-90 transition cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground font-medium hover:opacity-90 transition cursor-pointer"
                 >
-                  <Download className="w-3.5 h-3.5" />
+                  <Download className="w-4 h-4" />
                   <span>Export JSON Backup</span>
                 </button>
               </div>
 
               {/* Import Backup */}
-              <div className="space-y-2 pt-4 border-t border-border">
+              <div className="space-y-2 pt-4 border-t border-border/15">
                 <h4 className="font-semibold text-foreground">Import Backup</h4>
-                <p className="text-muted-foreground text-[11px]">
+                <p className="text-muted-foreground text-[13px]">
                   Restore a previously exported Bamboo JSON file.
                 </p>
 
-                <div className="flex items-center gap-4 text-xs">
+                <div className="flex items-center gap-4 text-sm">
                   <label className="flex items-center gap-1.5 cursor-pointer">
                     <input
                       type="radio"
@@ -532,24 +532,24 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border hover:bg-muted font-medium transition cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border border-border/15 hover:bg-muted font-medium transition cursor-pointer"
                 >
-                  <Upload className="w-3.5 h-3.5" />
+                  <Upload className="w-4 h-4" />
                   <span>Select Backup JSON...</span>
                 </button>
 
                 {importStatus && (
                   <div
-                    className={`p-2.5 rounded text-[11px] flex items-start gap-1.5 ${
+                    className={`p-2.5 rounded-lg text-[13px] flex items-start gap-1.5 ${
                       importStatus.success
                         ? 'bg-primary/10 border border-primary/30 text-foreground'
                         : 'bg-destructive/10 border border-destructive/30 text-destructive'
                     }`}
                   >
                     {importStatus.success ? (
-                      <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+                      <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                     ) : (
-                      <AlertTriangle className="w-3.5 h-3.5 text-destructive shrink-0 mt-0.5" />
+                      <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" />
                     )}
                     <span>{importStatus.message}</span>
                   </div>
@@ -557,18 +557,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </div>
 
               {/* Clear All Data */}
-              <div className="pt-4 border-t border-border">
+              <div className="pt-4 border-t border-border/15">
                 <h4 className="font-semibold text-destructive mb-1">Danger Zone</h4>
                 {!isConfirmingClearAll ? (
                   <button
                     type="button"
                     onClick={() => setIsConfirmingClearAll(true)}
-                    className="px-3 py-1.5 rounded-md border border-destructive/40 text-destructive hover:bg-destructive/10 font-medium transition cursor-pointer"
+                    className="px-4 py-2.5 rounded-xl border border-destructive/40 text-destructive hover:bg-destructive/10 font-medium transition cursor-pointer"
                   >
                     Clear all workspace data
                   </button>
                 ) : (
-                  <div className="p-3 rounded-lg border border-destructive/40 bg-destructive/10 space-y-2">
+                  <div className="p-3 rounded-xl border border-destructive/40 bg-destructive/10 space-y-2">
                     <p className="text-destructive font-medium">
                       Are you sure? This permanently erases all models, conversations, and presets from browser IndexedDB.
                     </p>
@@ -576,14 +576,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       <button
                         type="button"
                         onClick={handleClearAllData}
-                        className="px-3 py-1 rounded bg-destructive text-destructive-foreground font-medium cursor-pointer"
+                        className="px-3 py-1 rounded-lg bg-destructive text-destructive-foreground font-medium cursor-pointer"
                       >
                         Yes, Erase Everything
                       </button>
                       <button
                         type="button"
                         onClick={() => setIsConfirmingClearAll(false)}
-                        className="px-3 py-1 rounded border border-border hover:bg-muted cursor-pointer"
+                        className="px-3 py-1 rounded-lg border border-border/15 hover:bg-muted cursor-pointer"
                       >
                         Cancel
                       </button>
@@ -596,13 +596,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
           {/* --- PWA & OFFLINE --- */}
           {activeTab === 'pwa' && (
-            <div className="space-y-4 text-xs">
-              <div className="p-3 rounded-lg border border-border bg-card space-y-2">
+            <div className="space-y-4 text-sm">
+              <div className="p-3 rounded-xl border border-border/15 bg-card space-y-2">
                 <div className="flex items-center gap-2 font-semibold text-foreground">
                   <HardDrive className="w-4 h-4 text-primary" />
                   <span>Progressive Web App (PWA)</span>
                 </div>
-                <p className="text-muted-foreground text-[11px] leading-relaxed">
+                <p className="text-muted-foreground text-[13px] leading-relaxed">
                   Bamboo can run offline as a standalone application. When offline, your conversation history,
                   model configurations, and presets remain fully accessible.
                 </p>
@@ -610,7 +610,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
               <div className="space-y-2">
                 <h4 className="font-semibold text-foreground">How to Install</h4>
-                <ul className="list-disc list-inside space-y-1 text-muted-foreground text-[11px] leading-relaxed">
+                <ul className="list-disc list-inside space-y-1 text-muted-foreground text-[13px] leading-relaxed">
                   <li><strong>Chrome / Edge / Desktop:</strong> Click the "Install PWA" button in the header or the install icon in your address bar.</li>
                   <li><strong>iOS Safari:</strong> Tap the <em>Share</em> button in Safari toolbar, then select <em>Add to Home Screen</em>.</li>
                   <li><strong>Android Chrome:</strong> Tap the menu (three dots) and tap <em>Install app</em> or <em>Add to Home screen</em>.</li>

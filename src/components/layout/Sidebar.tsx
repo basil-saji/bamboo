@@ -65,7 +65,7 @@ function groupByDate(items: Conversation[]): { label: string; items: Conversatio
 }
 
 const rowButton =
-  'flex h-10 w-full items-center gap-2.5 rounded-xl px-3 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent cursor-pointer';
+  'flex h-11 w-full items-center gap-3 rounded-xl px-3 text-[15px] text-sidebar-foreground transition-colors hover:bg-sidebar-accent cursor-pointer';
 
 const SectionLabel: React.FC<{ children: React.ReactNode; icon?: React.ReactNode }> = ({ children, icon }) => (
   <div className="flex items-center gap-1.5 px-3 pb-1 pt-4 text-xs font-medium text-muted-foreground">
@@ -154,7 +154,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-[min(85vw,18rem)] flex-col border-r border-sidebar-border/10 bg-sidebar text-sidebar-foreground transition-transform duration-200 ease-out md:static md:z-auto md:w-[260px] md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-[min(85vw,18rem)] flex-col border-r border-sidebar-border/10 bg-sidebar text-sidebar-foreground transition-transform duration-200 ease-out md:static md:z-auto md:h-full md:w-[260px] md:translate-x-0 ${
           isOpenMobile ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
         }`}
         aria-label="Chats"
@@ -186,7 +186,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <span>New chat</span>
           </button>
 
-          <label className="flex h-10 w-full items-center gap-2.5 rounded-xl px-3 text-sm transition-colors focus-within:bg-sidebar-accent hover:bg-sidebar-accent">
+          <label className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-[15px] transition-colors focus-within:bg-sidebar-accent hover:bg-sidebar-accent">
             <Search className="h-[18px] w-[18px] shrink-0 text-muted-foreground" />
             <input
               type="text"
@@ -194,7 +194,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               aria-label="Search chats"
-              className="min-w-0 flex-1 bg-transparent text-base text-sidebar-foreground placeholder:text-sidebar-foreground focus:outline-none md:text-sm"
+              className="min-w-0 flex-1 bg-transparent text-[15px] text-sidebar-foreground placeholder:text-sidebar-foreground focus:outline-none max-md:text-base"
             />
             {searchQuery && (
               <button
@@ -329,7 +329,7 @@ const ConversationItem: React.FC<ConversationItemProps> = ({
 
   return (
     <div
-      className={`group relative flex h-10 items-center rounded-xl text-sm transition-colors ${
+      className={`group relative flex h-11 items-center rounded-xl text-[15px] transition-colors ${
         isActive || menuOpen
           ? 'bg-sidebar-accent text-sidebar-accent-foreground'
           : 'text-sidebar-foreground hover:bg-sidebar-accent/70'
